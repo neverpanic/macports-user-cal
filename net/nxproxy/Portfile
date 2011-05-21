@@ -1,0 +1,39 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem              1.0
+
+name                    nxproxy
+version                 3.4.0.2
+
+categories              net
+platforms               darwin
+license                 GPL-2
+
+maintainers             cal openmaintainer
+
+description             nxproxy is a compressing proxy for X
+long_description        nxproxy is a library compressing X commands to be passed over network \
+                        for use with x2go.
+
+homepage                http://www.nomachine.com/
+master_sites            http://code.x2go.org/releases/source/nxproxy/
+distname                ${name}_${version}
+checksums               md5     bd9985c4c982c1c9baaa3b001377c3cc \
+                        sha1    27cf3ab25959c97674547fd245a74ab18c704469 \
+                        rmd160  ee3dcbafb8989dc24665aade81bfb967d99e6f4e
+
+universal_variant       yes
+supported_archs         ppc i386 x86_64
+
+depends_lib             port:nxcomp
+
+post-configure {
+    reinplace -E "s|-L../nxcomp|-L${prefix}/lib/|g" ${worksrcpath}/Makefile
+    reinplace -E "s|-I../nxcomp|-I${prefix}/include/nxcomp|g" ${worksrcpath}/Makefile
+    reinplace -E "s|prefix      = ${prefix}|prefix      = \$(DESTDIR)${prefix}|g" ${worksrcpath}/Makefile
+    if {[variant_isset universal]} {
+        reinplace -E "s|CXXFLAGS =|CXXFLAGS = ${configure.universal_cxxflags}|g" ${worksrcpath}/Makefile
+    }
+}
+
