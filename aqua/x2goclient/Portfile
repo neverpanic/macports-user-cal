@@ -34,31 +34,28 @@ depends_lib             port:qt4-mac \
 
 configure.cmd           ${qt_qmake_cmd}
 configure.pre_args      PREFIX=${prefix}
+
+if {[variant_isset universal]} {
+    configure.args-append   QMAKE_LFLAGS+="${configure.universal_ldflags}" \
+                            QMAKE_CXXFLAGS+="${configure.universal_cxxflags}"
+} else {
+    configure.args-append   QMAKE_LFLAGS+="${configure.ld_archflags}" \
+                            QMAKE_CXXFLAGS+="${configure.cxx_archflags}"
+}
+
+# how can this be used to build universal?
+#configure.args-append   CONFIG+="${qt_arch_types}"
+
 configure.universal_args-delete \
                         --disable-dependency-tracking
 configure.env-append    QMAKESPEC=${qt_mkspecs_dir}/macx-g++
+build.env-append        QMAKESPEC=${qt_mkspecs_dir}/macx-g++
 
 pre-configure {
     ln -s ${name}/xsettingsui.ui ${worksrcpath}
     ln -s ${name}/xsettingswidget.cpp ${worksrcpath}
     ln -s ${name}/xsettingswidget.h ${worksrcpath}
 }
-
-build.env-append        QMAKESPEC=${qt_mkspecs_dir}/macx-g++
-if {[variant_isset universal]} {
-    build.args-append   CXXFLAGS="${configure.cxxflags} ${configure.universal_cxxflags}" \
-                        CFLAGS="${configure.cflags} ${configure.universal_cflags}" \
-                        CPPFLAGS="${configure.cppflags} ${configure.universal_cppflags}" \
-                        LFLAGS="${configure.ldflags} ${configure.universal_ldflags}"
-} else {
-    build.args-append   CXXFLAGS="${configure.cxxflags}" \
-                        CFLAGS="${configure.cflags}" \
-                        CPPFLAGS="${configure.cppflags}" \
-                        LFLAGS="${configure.ldflags}"
-}
-build.args-append       CC="${configure.cc}" \
-                        CXX="${configure.cxx}" \
-                        CPP="${configure.cpp}"
 
 destroot {
     copy ${worksrcpath}/${name}.app ${destroot}${applications_dir}
