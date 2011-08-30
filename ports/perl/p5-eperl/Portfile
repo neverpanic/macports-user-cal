@@ -114,7 +114,7 @@ destroot.destdir        prefix=${destroot}${prefix} \
 
 test.run                yes
 
-pre-build {
+pre-configure {
    if ![exec ${perl5.bin} -MConfig -e "print \$Config{'useshrplib'} || 0"] {
         ui_error "${name} requires perl5 to be installed with the +shared variant."
         return -code error "perl5 must be +shared"
