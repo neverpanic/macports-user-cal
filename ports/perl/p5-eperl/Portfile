@@ -23,8 +23,8 @@ master_sites            ftp://ftp.ossp.org/pkg/tool/eperl/ \
                         http://ftp.ossp.org/pkg/tool/eperl/ \
                         ftp://freebsd.isc.org/pub/FreeBSD/ports/distfiles/ 
 
-checksums               md5     0213580b6711b5312d1873f9732ae8d6 \
-                        sha1    cf05566602d93019a38638a6958739a1e192ead7
+checksums               rmd160  708c72d4a2bc494e9b3e953aa13efd0fe7933b98 \
+                        sha256  a9add61ed59e3030027e0ff5c00195627d7309be48162c9b315f57d27730a295
 
 use_configure           yes
 
