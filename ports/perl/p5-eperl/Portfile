@@ -10,7 +10,7 @@ distname                eperl-${version}
 license                 {Artistic GPL}
 platforms               darwin
 categories              www perl
-maintainers             nomaintainer
+maintainers             cal openmaintainer
 
 description             Embedded Perl Language
 long_description        ePerl interprets an ASCII file bristled with Perl 5 \
