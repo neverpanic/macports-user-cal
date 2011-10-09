@@ -1,0 +1,51 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem              1.0
+
+name                    herbstluftwm
+version                 0.1
+categories              x11 x11-wm
+license                 BSD
+maintainers             cal openmaintainer
+
+description             herbstluftwm is a very configurable tiling window manager
+long_description        \
+    herbstluftwm is a tiling window manager written from scratch supporting \
+    tags, multiple monitors and a flexible configuration.
+
+notes "In order to run herbstluftwm, you need to run the following commands as your user:
+    mkdir -p ~/.config/herbstluftwm
+    cp ${prefix}/etc/xdg/herbstluftwm/autostart ~/.config/herbstluftwm/autostart
+To make herbstluftwm your default X11 window manager, create a file named
+herbstluftwm.sh in your ~/.xinitrc.d directory (creating it if it doesn't exist) with
+the following contents:
+    USERWM=${prefix}/bin/herbstluftwm"
+
+homepage                http://wwwcip.cs.fau.de/~re06huxa/herbstluftwm/
+fetch.type              git
+git.url                 git://git.cs.fau.de/re06huxa/herbstluftwm
+git.branch              v${version}
+
+patchfiles              config.patch
+
+depends_build           bin:a2x:asciidoc
+
+depends_lib             port:glib2 \
+                        port:xorg-libX11
+
+# declare universal variant, so get_canonical_archflags works
+variant universal       {}
+
+use_configure           no
+
+build.args-append       CC=${configure.compiler} \
+                        LD=${configure.compiler} \
+                        EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
+                        EXTRALDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
+                        TPUT=true
+
+destroot.args-append    PREFIX=${destroot}/${prefix} \
+                        ETCDIR=${destroot}/${prefix}/etc/ \
+                        TPUT=true
+

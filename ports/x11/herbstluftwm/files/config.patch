@@ -1,0 +1,28 @@
+--- config.mk.orig	2011-10-09 21:06:21.000000000 +0200
++++ config.mk	2011-10-09 21:56:01.000000000 +0200
+@@ -1,7 +1,7 @@
+ 
+ # paths
+-X11INC = /usr/X11R6/include
+-X11LIB = /usr/X11R6/lib
++X11INC = /opt/local/include/X11
++X11LIB = /opt/local/lib
+ 
+ INCS = -Isrc/ -I/usr/include -I${X11INC}  `pkg-config --cflags glib-2.0`
+ LIBS = -L/usr/lib -lc -L${X11LIB} -lX11 `pkg-config --libs glib-2.0`
+@@ -9,13 +9,13 @@
+ # FLAGS
+ LD = gcc
+ CC = gcc
+-CFLAGS = -g -std=c99 -pedantic -Wall ${INCS} -D _XOPEN_SOURCE=600
++CFLAGS = -g -std=c99 -pedantic -Wall ${INCS} -D _XOPEN_SOURCE=600 ${EXTRACFLAGS}
+ VERSIONFLAGS = \
+     -D HERBSTLUFT_VERSION=$(VERSION) \
+     -D HERBSTLUFT_VERSION_MAJOR=$(VERSION_MAJOR) \
+     -D HERBSTLUFT_VERSION_MINOR=$(VERSION_MINOR)
+ CFLAGS += $(VERSIONFLAGS)
+-LDFLAGS = -g ${LIBS}
++LDFLAGS = -g ${LIBS} ${EXTRALDFLAGS}
+ PREFIX = ./build
+ BINDIR = $(PREFIX)/bin
+ SHAREDIR = $(PREFIX)/share
