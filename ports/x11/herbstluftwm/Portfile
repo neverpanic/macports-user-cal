@@ -31,7 +31,7 @@ patchfiles              config.patch
 
 depends_build           bin:a2x:asciidoc
 
-depends_lib             port:glib2 \
+depends_lib             path:lib/pkgconfig/glib-2.0.pc:glib2 \
                         port:xorg-libX11
 
 # declare universal variant, so get_canonical_archflags works
@@ -45,7 +45,7 @@ build.args-append       CC=${configure.compiler} \
                         EXTRALDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
                         TPUT=true
 
-destroot.args-append    PREFIX=${destroot}/${prefix} \
-                        ETCDIR=${destroot}/${prefix}/etc/ \
+destroot.args-append    PREFIX=${destroot}${prefix} \
+                        ETCDIR=${destroot}${prefix}/etc/ \
                         TPUT=true
 
