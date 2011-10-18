@@ -6,6 +6,7 @@ PortSystem              1.0
 name                    herbstluftwm
 version                 0.1
 categories              x11 x11-wm
+platforms               darwin
 license                 BSD
 maintainers             cal openmaintainer
 
