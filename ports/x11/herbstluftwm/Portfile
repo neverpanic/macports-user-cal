@@ -40,8 +40,8 @@ variant universal       {}
 
 use_configure           no
 
-build.args-append       CC=${configure.compiler} \
-                        LD=${configure.compiler} \
+build.args-append       CC=${configure.cc} \
+                        LD=${configure.cc} \
                         EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
                         EXTRALDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
                         TPUT=true
