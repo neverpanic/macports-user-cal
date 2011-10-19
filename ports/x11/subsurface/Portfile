@@ -34,7 +34,7 @@ variant universal       {}
 
 use_configure           no
 
-build.args-append       CC=${configure.compiler} \
+build.args-append       CC=${configure.cc} \
                         EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
                         LDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
                         prefix="${destroot}${prefix}"
