@@ -1,0 +1,43 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id $
+
+PortSystem              1.0
+
+name                    subsurface
+# when updating subsurface, it's probably a good idea to update libdivecomputer, too
+version                 2011101900
+categories              x11
+platforms               darwin
+license                 GPL-2
+maintainers             cal openmaintainer
+
+description             Subsurface is an open source dive log program written in C.
+long_description        ${description}
+
+homepage                http://subsurface.hohndel.org/
+fetch.type              git
+# this used to work with http when I first tried it, but somehow now returns 403
+git.url                 git://subsurface.hohndel.org/subsurface.git
+git.branch              2b3d39f6fc9814fb1190dd5b69396defe4cc85cf
+
+patchfiles              Makefile.patch
+
+depends_lib             path:lib/pkgconfig/glib-2.0.pc:glib2 \
+                        port:libxml2 \
+                        port:gtk2 \
+                        port:hicolor-icon-theme \
+                        port:gconf \
+                        port:libdivecomputer
+
+# declare universal variant, so get_canonical_archflags works
+variant universal       {}
+
+use_configure           no
+
+build.args-append       CC=${configure.compiler} \
+                        EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
+                        LDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
+                        prefix="${destroot}${prefix}"
+
+destroot.args-append    prefix="${destroot}${prefix}"
+
