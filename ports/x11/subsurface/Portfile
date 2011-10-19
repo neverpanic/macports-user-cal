@@ -16,8 +16,7 @@ long_description        ${description}
 
 homepage                http://subsurface.hohndel.org/
 fetch.type              git
-# this used to work with http when I first tried it, but somehow now returns 403
-git.url                 git://subsurface.hohndel.org/subsurface.git
+git.url                 http://subsurface.hohndel.org/subsurface.git
 git.branch              2b3d39f6fc9814fb1190dd5b69396defe4cc85cf
 
 patchfiles              Makefile.patch
