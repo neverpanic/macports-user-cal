@@ -16,8 +16,8 @@ long_description        ${description}
 
 homepage                http://subsurface.hohndel.org/
 fetch.type              git
-git.url                 http://subsurface.hohndel.org/subsurface.git
-git.branch              2b3d39f6fc9814fb1190dd5b69396defe4cc85cf
+git.url                 https://github.com/torvalds/subsurface.git
+git.branch              04f372f8aa5b4f9ba462e0e93b76f3dde6af00f1
 
 patchfiles              Makefile.patch
 
