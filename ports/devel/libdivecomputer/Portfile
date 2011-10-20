@@ -32,8 +32,3 @@ depends_lib             port:gconf \
 
 use_autoreconf          yes
 
-# declare universal variant, so get_canonical_archflags works
-variant universal       {}
-
-configure.env-append    LIBUSB_CFLAGS=-I${prefix}
-
