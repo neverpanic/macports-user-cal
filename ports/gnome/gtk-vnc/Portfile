@@ -14,11 +14,10 @@ long_description        ${description} It is built using coroutines allowing it 
                         asynchronous while remaining single threaded. It provides a core C \
                         library, and bindings for Python (PyGTK).
 homepage                http://live.gnome.org/gtk-vnc/
-license                 GPL-2.1
+license                 LGPL-2+
 master_sites            gnome
 master_sites.mirror_subdir \
                         sources/${name}/[join [lrange [split ${version} .] 0 1] .]
-distfiles               ${name}-${version}.tar.bz2
 use_bzip2               yes
 checksums               rmd160  f7cc379b43088b83628dc92fb10ece463b1ab8fc \
                         sha256  b9870d923d636d2e7547267d01c8cafdc06ad5b5b4987003ea3cd567bfbb6377
