@@ -1,0 +1,40 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id $
+
+PortSystem              1.0
+
+name                    libvirt
+version                 0.9.6
+categories              devel
+platforms               darwin
+license                 LGPL-2.1
+maintainers             cal openmaintainer
+
+description             libvirt is a toolkit to interact with virtualization capabilities of \
+                        recent versions Linux (and other OSes).
+long_description        ${description} libvirt supports KVM/QEMU, Xen, LXC, OpenVZ, User Mode \
+                        Linux, VirtualBox, VMWare ESX and GSX, VMWare Workstation and Player, \
+                        Microsoft Hyper-V, configuring virtual networks using bridging, NAT, \
+                        VEPA and VN-LINK and storage on IDE/SCSI/USB disks, FibreChannel, LVM \
+                        iSCSI, NFS and filesystems.
+homepage                http://libvirt.org/
+master_sites            http://libvirt.org/sources/
+distfiles               libvirt-${version}.tar.gz
+checksums               rmd160  5e0837e8ee770e017e574fd002e9e489e448ca65 \
+                        sha256  ce29b1cd3067b224aa834fec2a93d7613c0e72bc035760ad536a2142430bc02b
+
+depends_lib             port:cryus-sasl2 \
+                        port:curl \
+                        port:gettext \
+                        port:gnutls \
+                        port:libgcrypt \
+                        port:libgpg-error \
+                        port:libiconv
+                        port:libidn \
+                        port:libtasn1 \
+                        port:libxml2 \
+                        port:openssl \
+                        port:readline
+                        port:zlib \
+
+
