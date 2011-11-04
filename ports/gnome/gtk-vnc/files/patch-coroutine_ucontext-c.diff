@@ -1,0 +1,11 @@
+--- src/coroutine_ucontext.c.orig	2011-11-04 04:33:29.000000000 +0100
++++ src/coroutine_ucontext.c	2011-11-04 04:35:58.000000000 +0100
+@@ -60,7 +60,7 @@
+ 	co->cc.stack_size = co->stack_size;
+ 	co->cc.stack = mmap(0, co->stack_size,
+ 			    PROT_READ | PROT_WRITE,
+-			    MAP_PRIVATE | MAP_ANONYMOUS,
++			    MAP_PRIVATE | MAP_ANON,
+ 			    -1, 0);
+ 	if (co->cc.stack == MAP_FAILED)
+ 		return -1;

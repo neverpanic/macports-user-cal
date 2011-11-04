@@ -1,0 +1,12 @@
+--- src/vncmodule.c.orig	2011-11-04 05:03:09.000000000 +0100
++++ src/vncmodule.c	2011-11-04 05:03:34.000000000 +0100
+@@ -18,7 +18,9 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+  */
+ 
++#define NO_IMPORT_PYGOBJECT
+ #include <pygobject.h>
++#undef NO_IMPORT_PYGOBJECT
+ 
+ void gtkvnc_register_classes (PyObject *d);
+ void gtkvnc_add_constants(PyObject *module, const gchar *strip_prefix);

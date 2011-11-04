@@ -1,0 +1,10 @@
+--- src/continuation.h.orig	2011-11-04 04:31:32.000000000 +0100
++++ src/continuation.h	2011-11-04 04:31:43.000000000 +0100
+@@ -22,6 +22,7 @@
+ #define _CONTINUATION_H_
+ 
+ #include <ucontext.h>
++#include <stddef.h>
+ 
+ struct continuation
+ {
