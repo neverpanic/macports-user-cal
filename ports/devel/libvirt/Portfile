@@ -23,7 +23,7 @@ distfiles               libvirt-${version}.tar.gz
 checksums               rmd160  5e0837e8ee770e017e574fd002e9e489e448ca65 \
                         sha256  ce29b1cd3067b224aa834fec2a93d7613c0e72bc035760ad536a2142430bc02b
 
-depends_lib             port:cryus-sasl2 \
+depends_lib             port:cyrus-sasl2 \
                         port:curl \
                         port:gettext \
                         port:gnutls \
