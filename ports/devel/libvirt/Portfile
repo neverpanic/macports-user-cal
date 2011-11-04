@@ -31,10 +31,14 @@ depends_lib             port:cyrus-sasl2 \
                         port:libgpg-error \
                         port:libiconv \
                         port:libidn \
+                        port:libssh2 \
                         port:libtasn1 \
                         port:libxml2 \
                         port:openssl \
                         port:readline \
                         port:zlib
 
-
+post-destroot {
+    file mkdir "${destroot}${frameworks_dir}/Python.framework/Versions/2.7/lib"
+    file rename "${destroot}${prefix}/lib/python2.7/site-packages" "${destroot}${frameworks_dir}/Python.framework/Versions/2.7/lib/python2.7"
+}
