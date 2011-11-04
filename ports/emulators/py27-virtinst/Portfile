@@ -1,0 +1,26 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id $
+
+PortSystem              1.0
+PortGroup               python27 1.0
+
+name                    py27-virtinst
+version                 0.600.0
+categories              emulators python
+platforms               darwin
+license                 GPL
+maintainers             cal openmaintainer
+
+description             Virt Install is a command line tool which provides an easy way to \
+                        provision operating systems into virtual machines.
+long_description        ${description} It also provides an API to the virt-manager \
+                        application for its graphical VM creation wizard.
+homepage                http://virt-manager.org/
+master_sites            http://virt-manager.org/download/sources/virtinst/
+distname                virtinst-${version}
+checksums               rmd160  6efb6ce5ad6d6c4d5ffbc95e1695ac125d1ee249 \
+                        sha256  92dc8f14d31ffb0e79479fab982203027c45c83d25e73af7627f589f92ca797a
+
+depends_lib-append      port:libvirt \
+                        port:py27-urlgrabber
+
