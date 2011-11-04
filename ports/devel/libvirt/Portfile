@@ -29,12 +29,12 @@ depends_lib             port:cryus-sasl2 \
                         port:gnutls \
                         port:libgcrypt \
                         port:libgpg-error \
-                        port:libiconv
+                        port:libiconv \
                         port:libidn \
                         port:libtasn1 \
                         port:libxml2 \
                         port:openssl \
-                        port:readline
-                        port:zlib \
+                        port:readline \
+                        port:zlib
 
 
