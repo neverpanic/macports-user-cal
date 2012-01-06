@@ -7,6 +7,9 @@ PortGroup               qt4 1.0
 name                    x2goclient
 version                 3.0.1.18
 
+livecheck.url           http://code.x2go.org/releases/source/x2goclient/
+livecheck.regex         ${name}_(\\d+(?:\\.\\d+)*)\\.tar.gz
+
 categories              aqua net
 platforms               macosx
 license                 GPL-2+
@@ -32,24 +35,19 @@ depends_lib             port:qt4-mac \
                         port:nxproxy \
                         port:libssh
 
+# building with clang calls the linker with -lstdc++ in the end, which fails
+# because there's only libstdc++.6.dylib in /Developer/SDKs/MacOSX10.6sdk/lib
+if {${configure.compiler} == "clang"} {
+    configure.compiler  llvm-gcc-4.2
+}
+
 configure.cmd           ${qt_qmake_cmd}
 configure.pre_args      PREFIX=${prefix}
 
-if {[variant_isset universal]} {
-    configure.args-append   QMAKE_LFLAGS+="${configure.universal_ldflags}" \
-                            QMAKE_CXXFLAGS+="${configure.universal_cxxflags}"
-} else {
-    configure.args-append   QMAKE_LFLAGS+="${configure.ld_archflags}" \
-                            QMAKE_CXXFLAGS+="${configure.cxx_archflags}"
-}
-
-# how can this be used to build universal?
-#configure.args-append   CONFIG+="${qt_arch_types}"
-
-configure.universal_args-delete \
-                        --disable-dependency-tracking
-configure.env-append    QMAKESPEC=${qt_mkspecs_dir}/macx-g++
-build.env-append        QMAKESPEC=${qt_mkspecs_dir}/macx-g++
+configure.args-append   QMAKE_CC="${configure.cc}" \
+                        QMAKE_CXX="${configure.cxx}" \
+                        QMAKE_LINK="${configure.cxx}" \
+                        CONFIG+="${qt_arch_types}"
 
 pre-configure {
     ln -s ${name}/xsettingsui.ui ${worksrcpath}
