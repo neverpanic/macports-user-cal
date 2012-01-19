@@ -5,7 +5,7 @@ PortSystem              1.0
 
 name                    libdivecomputer
 # please, when updating libdivecomputer, check whether subsurface still builds against the new version
-version                 2011101900
+version                 20120119
 categories              devel
 platforms               darwin
 license                 LGPL-2.1
@@ -23,8 +23,8 @@ long_description        ${description} Supported devices include devices \
 homepage                http://www.divesoftware.org/libdc/
 fetch.type              git
 git.url                 git://libdivecomputer.git.sourceforge.net/gitroot/libdivecomputer/libdivecomputer
-# latest as of 2011-10-19
-git.branch              b7a6be15ca58cc8f89fbc8fa1a4c840e13d51092
+# latest as of 2012-01-19
+git.branch              87397a4ea1c63d78efd9bf751dee19f54257a6f9
 
 depends_lib             port:gconf \
                         port:gtk2 \
