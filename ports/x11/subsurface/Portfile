@@ -18,6 +18,8 @@ long_description        ${description}
 
 github.setup            torvalds subsurface 1.2 v
 homepage                http://subsurface.hohndel.org/
+checksums               rmd160  f6c3251dc762c6396b18662b680493f94558a503 \
+                        sha256  aa0cf4cbbb8ecafd78f17ee224b4dfc52814216fded0c83a9c977e382c21116e
 
 patchfiles              Makefile.patch
 
@@ -35,8 +37,15 @@ use_configure           no
 
 build.args-append       CC=${configure.cc} \
                         EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
-                        LDFLAGS="${configure.ldflags} [get_canonical_archflags]" \
+                        LDFLAGS="${configure.ldflags} [get_canonical_archflags] -framework CoreFoundation" \
+                        mpprefix="${prefix}" \
+                        mpappdir="${destroot}${applications_dir}" \
                         prefix="${destroot}${prefix}"
 
-destroot.args-append    prefix="${destroot}${prefix}"
+destroot.args-append    CC=${configure.cc} \
+                        EXTRACFLAGS="${configure.cflags} [get_canonical_archflags]" \
+                        LDFLAGS="${configure.ldflags} [get_canonical_archflags] -framework CoreFoundation" \
+                        prefix="${destroot}${prefix}" \
+                        mpappdir="${destroot}${applications_dir}"
+destroot.target         install-macosx
 
