@@ -1,0 +1,11 @@
+--- src/Makefile.am.orig	2012-03-10 02:30:26.000000000 +0100
++++ src/Makefile.am	2012-03-10 02:30:32.000000000 +0100
+@@ -85,7 +85,7 @@
+ 
+ if BUILD_WITH_OWN_LIBOCONFIG
+ collectd_LDADD += $(LIBLTDL) liboconfig/liboconfig.la
+-collectd_DEPENDENCIES += $(LIBLTDL) liboconfig/liboconfig.la
++collectd_DEPENDENCIES += liboconfig/liboconfig.la
+ else
+ collectd_LDADD += -loconfig
+ endif
