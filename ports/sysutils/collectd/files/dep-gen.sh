@@ -226,7 +226,39 @@ OSX_STANDARD=(
 	ted
 	threshold
 	unixsock
+	uptime
+	users
+	uuid
 	write_http
+)
+
+declare -A EXTRA_CODE
+read -r -d '' PERL_EXTRA <<'EOF'
+    pre-configure {
+        set perl5bin "${prefix}/bin/perl5"
+        if {[string first "true" [exec ${perl5bin} -V:useshrplib]] == -1} {
+            ui_error "${name} requires perl5 to be installed with the +shared variant."
+            return -code error "perl5 must be +shared"
+        }
+        if {[string first "define" [exec ${perl5bin} -V:usethreads]] == -1} {
+            ui_error "${name} requires perl5 to be installed with the +threads variant."
+            return -code error "perl5 must be +threads"
+        }
+    }
+EOF
+read -r -d '' JAVA_EXTRA <<'EOF'
+    pre-configure {
+        ui_warn "Compiling with Java will probably fail; if you want to make it work, read `Configuring with libjvm' in README in the upstream git"
+    }
+EOF
+read -r -d '' NETWORK_EXTRA <<'EOF'
+    # silence a deprecation warning
+    configure.cflags-append -D_GCRYPT_IN_LIBGCRYPT=1
+EOF
+EXTRA_CODE=(
+	[perl]="$PERL_EXTRA"
+	[java]="$JAVA_EXTRA"
+	[network]="$NETWORK_EXTRA"
 )
 
 
@@ -241,6 +273,10 @@ for plugin in ${!PLUGINS[@]}; do
 		printf "variant %s description {%s} {\n" "$plugin" "${PLUGINS[$plugin]}"
 		printf "    configure.args-delete --disable-$plugin\n"
 		printf "    configure.args-append --enable-$plugin\n"
+		if [ -n "${EXTRA_CODE[$plugin]}" ]; then
+			echo
+			echo "    ${EXTRA_CODE[$plugin]}"
+		fi
 		if [ -n "${PLUGIN_DEPS[$plugin]}" ]; then
 			printf "\n    depends_lib-delete %s\n" "${PLUGIN_DEPS[$plugin]}"
 			printf "    depends_lib-append %s\n" "${PLUGIN_DEPS[$plugin]}"
