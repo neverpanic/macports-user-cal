@@ -27,6 +27,9 @@ supported_archs         ppc i386 x86_64
 
 depends_lib             port:nxcomp
 
+livecheck.url           ${master_sites}
+livecheck.regex         ${name}-(\[0-9\]+(\\.\[0-9\]+)+(-\[0-9\]+)?)
+
 post-configure {
     reinplace -E "s|-L../nxcomp|-L${prefix}/lib/|g" ${worksrcpath}/Makefile
     reinplace -E "s|-I../nxcomp|-I${prefix}/include/nxcomp|g" ${worksrcpath}/Makefile
