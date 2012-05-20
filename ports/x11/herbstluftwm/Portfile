@@ -4,7 +4,7 @@
 PortSystem              1.0
 
 name                    herbstluftwm
-version                 0.1
+version                 0.3
 categories              x11 x11-wm
 platforms               darwin
 license                 BSD
@@ -24,11 +24,17 @@ the following contents:
     USERWM=${prefix}/bin/herbstluftwm"
 
 homepage                http://wwwcip.cs.fau.de/~re06huxa/herbstluftwm/
-fetch.type              git
-git.url                 git://git.cs.fau.de/re06huxa/herbstluftwm
-git.branch              v${version}
+master_sites            ${homepage}/tarballs/
 
-patchfiles              config.patch
+checksums               rmd160  056efcf0e2091b479f8b2a04eb3d7d1b72645cda \
+                        sha256  219ceb2066515a2cfb68430e86306071c25135771efb33168849334761caa8b0
+
+livecheck.type          regex
+livecheck.url           ${master_sites}
+livecheck.regex         ${name}-(\[0-9\]+(\\.\[0-9\]+)*)\\${extract.suffix}
+
+patchfiles              config.patch \
+                        0001-Use-clock_get_time-on-systems-with-a-mach-kernel.patch
 
 depends_build           bin:a2x:asciidoc
 
