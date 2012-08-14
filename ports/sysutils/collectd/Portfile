@@ -26,7 +26,7 @@ maintainers         cal openmaintainer
 patchfiles          patch-src-network.c.patch \
                     patch-src-Makefile.am.patch
 
-use_autoreconf      yes
+use_automake        yes
 
 # enable all matches and targets, disable all the rest
 configure.args      \
