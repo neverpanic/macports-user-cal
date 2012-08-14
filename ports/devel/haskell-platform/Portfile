@@ -37,7 +37,6 @@ depends_run \
     port:hs-platform-regex-compat	\
     port:hs-platform-regex-posix	\
     port:hs-platform-stm		\
-    port:hs-platform-time		\
     port:hs-platform-xhtml		\
     port:hs-platform-zlib		\
     port:hs-platform-HTTP		\
