@@ -12,6 +12,8 @@ license                 BSD
 maintainers             cal openmaintainer
 platforms               darwin
 
+depends_lib-append      port:zlib
+
 description             \
     This package provides a pure interface for compressing and decompressing \
     streams of data represented as lazy ByteStrings. It uses the zlib C library \
