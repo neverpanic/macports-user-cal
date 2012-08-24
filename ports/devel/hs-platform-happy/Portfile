@@ -2,43 +2,17 @@
 # $Id$
 
 PortSystem              1.0
+PortGroup               haskellplatform 1.0
 
-# can't use the haskellplatform port group because of the (un)?register.sh scripts
-# basically, the following is the spelled-out haskellplatform port group
-
-name                    hs-platform-happy
-version                 1.18.9
+haskellplatform.setup   happy 1.18.9 no
 checksums               rmd160  adfe119ffd485953fe7f8a81575191cdfea5a7f5 \
                         sha256  7d34c512b8aecbc135f6b4c43bc18044ff50ae6d5afdd0d2570228dccecb618a
-categories              devel haskell
-homepage                http://hackage.haskell.org/package/happy
-master_sites            http://hackage.haskell.org/packages/archive/happy/${version}
-distname                happy-${version}
-
-configure.args          Setup configure \
-                        --prefix=${prefix} \
-                        --with-compiler=${prefix}/bin/ghc \
-                        -v \
-						--with-gcc=${configure.cc}
-configure.cmd           runhaskell
-configure.pre_args
-build.cmd               ${configure.cmd}
-build.args              Setup build -v
-build.target
-destroot.cmd            ${configure.cmd}
-destroot.destdir
-destroot.target         Setup copy --destdir=${destroot}
-
-universal_variant       no
-
-livecheck.type          none
 
 license                 BSD
 maintainers             cal openmaintainer
 platforms               darwin
 
-depends_lib             port:hs-platform-ghc \
-                        port:hs-platform-mtl
+depends_lib-append      port:hs-platform-mtl
 
 description             \
     Happy is a parser generator system for Haskell, similar to the tool `yacc' \
