@@ -29,7 +29,6 @@ depends_run     port:hs-platform-alex \
                 port:hs-platform-cgi \
                 port:hs-platform-fgl \
                 port:hs-platform-ghc \
-                port:hs-platform-ghc-paths \
                 port:hs-platform-glut \
                 port:hs-platform-happy \
                 port:hs-platform-haskell-src \
