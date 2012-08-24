@@ -31,15 +31,18 @@
 #
 # Usage:
 # PortGroup                 haskell-platform 1.0
-# haskellplatform.setup     haskell_package version
+# haskellplatform.setup     haskell_package version [register_scripts]
 # where haskell_package is the name of the package (eg, digest), version is the
 # version for it. This automatically defines name, version, categories,
 # homepage, master_sites, distname, and depends_build as appropriate, and sets
 # up the configure, build, destroot, and post-activate stages. It can do
-# pre-deactivate if that ever becomes an option in MacPorts.
+# pre-deactivate if that ever becomes an option in MacPorts. register_scripts
+# can be used to deactivate installing register.sh and unregister.sh as might be
+# needed for non-library parts of the haskell platform. Set it to "no" to
+# achieve this; defaults to "yes".
 
 
-proc haskellplatform.setup {package version} {
+proc haskellplatform.setup {package version {register_scripts "yes"}} {
     global homepage prefix configure.cmd configure.cc destroot worksrcpath name master_sites
 
     name                hs-platform-[string tolower ${package}]
@@ -64,19 +67,21 @@ proc haskellplatform.setup {package version} {
     destroot.cmd        ${configure.cmd}
     destroot.destdir
     destroot.target     Setup copy --destdir=${destroot}
-    post-destroot {
-        system "cd ${worksrcpath} && ${configure.cmd} Setup register --gen-script"
-        system "cd ${worksrcpath} && ${configure.cmd} Setup unregister --gen-script"
-        xinstall -m 755 -d ${destroot}${prefix}/libexec/${name}
-        xinstall -m 755 -W ${worksrcpath} register.sh unregister.sh \
-            ${destroot}${prefix}/libexec/${name}
-    }
-    post-activate {
-        system "${prefix}/libexec/${name}/register.sh"
-    }
-    pre-deactivate {
-        system "${prefix}/libexec/${name}/unregister.sh"
-    }
+	if {${register_scripts} == "yes"} {
+		post-destroot {
+    	    system "cd ${worksrcpath} && ${configure.cmd} Setup register --gen-script"
+    	    system "cd ${worksrcpath} && ${configure.cmd} Setup unregister --gen-script"
+    	    xinstall -m 755 -d ${destroot}${prefix}/libexec/${name}
+    	    xinstall -m 755 -W ${worksrcpath} register.sh unregister.sh \
+    	        ${destroot}${prefix}/libexec/${name}
+    	}
+    	post-activate {
+    	    system "${prefix}/libexec/${name}/register.sh"
+    	}
+    	pre-deactivate {
+    	    system "${prefix}/libexec/${name}/unregister.sh"
+    	}
+	}
     universal_variant   no
 
     livecheck.type      none
