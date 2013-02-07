@@ -2,14 +2,16 @@
 # $Id $
 
 PortSystem              1.0
-PortGroup               python27 1.0
+PortGroup               python 1.0
 
-name                    py27-virtinst
-version                 0.600.0
+name                    py-virtinst
+version                 0.600.3
+python.versions         27 32 33
 categories              emulators python
 platforms               darwin
-license                 GPL
+license                 GPL-2+
 maintainers             cal openmaintainer
+
 
 description             Virt Install is a command line tool which provides an easy way to \
                         provision operating systems into virtual machines.
@@ -18,9 +20,15 @@ long_description        ${description} It also provides an API to the virt-manag
 homepage                http://virt-manager.org/
 master_sites            http://virt-manager.org/download/sources/virtinst/
 distname                virtinst-${version}
-checksums               rmd160  6efb6ce5ad6d6c4d5ffbc95e1695ac125d1ee249 \
-                        sha256  92dc8f14d31ffb0e79479fab982203027c45c83d25e73af7627f589f92ca797a
+checksums               rmd160  e6fedfaaf40bdbf29b18df5381efe875908d4149 \
+                        sha256  e41efad3e3c798129af0cec92c1abd6c7e209b5dd4d311acdef0fc1a2daf5006
 
-depends_lib-append      port:libvirt \
-                        port:py27-urlgrabber
+depends_lib-append      port:libvirt
 
+if {${name} != ${subport}} {
+    depends_lib-append  port:py${python.version}-urlgrabber
+} else {
+    livecheck.type      regex
+    livecheck.url       ${master_sites}
+    livecheck.regex     "virtinst-(\\d+(?:\\.\\d+)*)[quotemeta ${extract.suffix}]"
+}
