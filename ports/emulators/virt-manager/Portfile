@@ -31,7 +31,7 @@ checksums               rmd160  f3af53591babe3d95c4017d19a292fd6c1bfee97 \
 depends_build           port:intltool
 
 depends_lib             port:python27 \
-                        port:py27-gtk \
+                        port:py27-pygtk \
                         port:py27-gnome \
                         port:libvirt \
                         port:dbus-python27 \
