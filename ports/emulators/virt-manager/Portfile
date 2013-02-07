@@ -11,17 +11,20 @@ platforms               darwin
 license                 GPL
 maintainers             cal openmaintainer
 
-description             Virtual Machine Manager is a desktop user interface for managing \
-                        virtual machines.
-long_description        ${description} It presents a summary view of running domains, their \
-                        live performance & resource utilization statistics. The detailed view \
-                        graphs performance & utilization over time. Wizards enable the creation \
-                        of new domains, and configuration & adjustment of a domain's resource \
-                        allocation & virtual hardware. An embedded VNC client viewer presents a \
-                        full graphical console to the guest domain.
+description             \
+    Virtual Machine Manager is a desktop user interface for managing virtual \
+    machines.
+long_description        ${description} \
+    It presents a summary view of running domains, their live performance \
+    & resource utilization statistics. The detailed view graphs performance \
+    & utilization over time. Wizards enable the creation of new domains, and \
+    configuration & adjustment of a domain's resource allocation & virtual \
+    hardware. An embedded VNC client viewer presents a full graphical console \
+    to the guest domain.
+
 homepage                http://virt-manager.org/
 master_sites            http://virt-manager.org/download/sources/virt-manager/
-distfiles               virt-manager-${version}.tar.gz
+
 checksums               rmd160  f3af53591babe3d95c4017d19a292fd6c1bfee97 \
                         sha256  db0de808efa5d6bae0bdc2db796e58ea79f9e1db20d9a5a5977b28b4b85d4321
 
@@ -38,7 +41,3 @@ depends_lib             port:python27 \
                         port:policykit \
                         port:py27-virtinst \
                         port:gtk-vnc
-
-
-
-
