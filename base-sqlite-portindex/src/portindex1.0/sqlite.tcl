@@ -1,4 +1,4 @@
-# vim:et:ts=4:tw=80
+# vim:et:ts=4:tw=100
 # sqlite.tcl
 # $Id$
 #
@@ -49,28 +49,31 @@ namespace eval portindex::sqlite {
     # Variable holding the SQLite database connection
     variable db
 
-    # Timestamp of the last PortIndex update, to find out whether we need to
-    # re-parse a port.
+    # Timestamp of the last PortIndex update, to find out whether we need to re-parse a port.
     variable oldmtime
 
-    # Updates the PortIndex. Consider this to start a transaction, run the Tcl
-    # block given in $script and finish a transaction (which is what it does in
-    # the SQLite variant).
+    # Updates the PortIndex. Consider this to start a transaction, run the Tcl block given in
+    # $script and finish a transaction (which is what it does in the SQLite variant).
     namespace export update
     proc update {outdir script} {
         variable db
 
         init ${outdir}
         db transaction {
-            ${script}
+            eval ${script}
+
+            # Bring out the garbage
+            db eval {
+                DELETE FROM portindex WHERE colorbit != 1;
+                UPDATE portindex SET colorbit = 0;
+            }
         }
         finish
     }
 
-    # Initialize the database and create the required tables. This is only
-    # called after the database has successfully been opened, so we can assume
-    # the connection to be open. We haven't ensured the file to be writable yet,
-    # though…
+    # Initialize the database and create the required tables. This is only called after the database
+    # has successfully been opened, so we can assume the connection to be open. We haven't ensured
+    # the file to be writable yet, though…
     proc create_database {database} {
         if {[catch {
             db eval "
@@ -133,6 +136,7 @@ namespace eval portindex::sqlite {
                     , replaced_by TEXT
                     , installs_libs BOOL
                     , mtime INTEGER
+                    , colorbit BOOL
                     , FOREIGN KEY (parentport) REFERENCES portindex (id)
                        ON DELETE CASCADE
                        ON UPDATE CASCADE
@@ -150,8 +154,8 @@ namespace eval portindex::sqlite {
     }
 
     # Initialize this PortIndex generator.
-    # Sets any variables this specific implementation of the portindex needs
-    # and opens a new temporary portindex file.
+    # Sets any variables this specific implementation of the portindex needs and opens a new
+    # temporary portindex file.
     proc init {outdir_param} {
         package require sqlite3
 
@@ -219,11 +223,10 @@ namespace eval portindex::sqlite {
         set save_prefix ${macports::prefix}
     }
 
-    # Insert a list-type field into the portindex database. Examples for
-    # list-type fields are: categories, variants, maintainers, licenses, and
-    # platforms. Parameters are the name of the table holding the list, the
-    # name of the field (both in the portinfo array and in the database table)
-    # and a reference to the portinfo array.
+    # Insert a list-type field into the portindex database. Examples for list-type fields are:
+    # categories, variants, maintainers, licenses, and platforms. Parameters are the name of the
+    # table holding the list, the name of the field (both in the portinfo array and in the database
+    # table) and a reference to the portinfo array.
     proc insert_list {table field portinfofield portinforef} {
         variable db
 
@@ -236,9 +239,7 @@ namespace eval portindex::sqlite {
 
         foreach value $portinfo($portinfofield) {
             db eval "
-                INSERT INTO
-                    $table
-                (
+                INSERT INTO $table (
                       port_id
                     , $field
                 ) VALUES (
@@ -261,24 +262,12 @@ namespace eval portindex::sqlite {
         if {![info exists portinfo($portinfofield)]} {
             # we have an empty list
             # make sure the database is empty for this combination, too
-            db eval "
-                DELETE FROM
-                    $table
-                WHERE
-                    port_id = :portinfo(id)
-            "
+            db eval "DELETE FROM $table WHERE port_id = :portinfo(id)"
             return
         }
 
         # Get old and new entries to generate a set of diffs
-        set oldentries [db eval "
-            SELECT
-                $field
-            FROM
-                tmpdb.$table
-            WHERE
-                port_id = :portinfo(id)
-        "]
+        set oldentries [db eval "SELECT $field FROM tmpdb.$table WHERE port_id = :portinfo(id)"]
         set newentries $portinfo($portinfofield)
 
         set added   [list]
@@ -298,18 +287,11 @@ namespace eval portindex::sqlite {
 
         # and delete/add them
         foreach del $deleted {
-            db eval "
-                DELETE FROM
-                    $table
-                WHERE
-                        port_id = :portinfo(id)
-                    AND $field  = :del
-            "
+            db eval "DELETE FROM $table WHERE port_id = :portinfo(id) AND $field = :del"
         }
         foreach add $added {
             db eval "
-                INSERT INTO
-                    $table
+                INSERT INTO $table
                 (
                       port_id
                     , $field
@@ -342,20 +324,12 @@ namespace eval portindex::sqlite {
 
         upvar $portinforef portinfo
 
-        set portinfo(id) [db onecolumn {
-            SELECT
-                id
-            FROM
-                tmpdb.portindex
-            WHERE
-                port = $portinfo(name)
-        }]
+        set portinfo(id) [db onecolumn {SELECT id FROM tmpdb.portindex WHERE port = $portinfo(name)}]
 
         if {$portinfo(id) == ""} {
             # new entry, just dump it into the database
             db eval {
-                INSERT INTO
-                    portindex
+                INSERT INTO portindex
                 (
                     port
                   , parentport
@@ -369,6 +343,7 @@ namespace eval portindex::sqlite {
                   , replaced_by
                   , installs_libs
                   , mtime
+                  , colorbit
                 ) VALUES (
                     $portinfo(name)
                   , $parentport
@@ -382,6 +357,7 @@ namespace eval portindex::sqlite {
                   , $portinfo(replaced_by)
                   , $portinfo(installs_libs)
                   , $mtime
+                  , 1
                 )
             }
             set portinfo(id) [db last_insert_rowid]
@@ -389,8 +365,7 @@ namespace eval portindex::sqlite {
         } else {
             # update the existing entry
             db eval {
-                UPDATE
-                    portindex
+                UPDATE portindex
                 SET
                       parentport        = $parentport
                     , epoch             = $portinfo(epoch)
@@ -403,6 +378,7 @@ namespace eval portindex::sqlite {
                     , replaced_by       = $portinfo(replaced_by)
                     , installs_libs     = $portinfo(installs_libs)
                     , mtime             = $mtime
+                    , colorbit          = 1
                 WHERE
                     id                  = $portinfo(id)
             }
@@ -438,15 +414,7 @@ namespace eval portindex::sqlite {
 
         # try to reuse the existing entry if it's still valid
         if {$full_reindex != "1"} {
-            set port_id [db onecolumn {
-                SELECT
-                    id
-                FROM
-                    tmpdb.portindex
-                WHERE
-                        portdir = $portdir
-                    AND parentport = ""
-            }]
+            set port_id [db onecolumn {SELECT id FROM tmpdb.portindex WHERE portdir = $portdir AND parentport = ""}]
             if {$port_id != ""} {
                 try {
                     if {$oldmtime >= $mtime} {
@@ -456,15 +424,14 @@ namespace eval portindex::sqlite {
 
                         # Re-using an entry in SQLite-based PortIndex is as easy as
                         # doing nothing.
-                        # This means we can also skip the subports
-                        portindex::inc_skipped [db onecolumn {
-                            SELECT
-                                COUNT(*)
-                            FROM
-                                tmpdb.portindex
-                            WHERE
-                                portdir = $portdir
-                        }]
+                        # We need to mark the entries as valid to prevent them
+                        # from being garbage collected, though.
+                        # We'll do this for this port and all its subports at
+                        # once.
+                        [db eval {UPDATE portindex SET colorbit = 1 WHERE portdir = $portdir}]
+
+                        # Add the number of changes entries to the skip count
+                        portindex::inc_skipped [db changes]
 
                         return
                     }
