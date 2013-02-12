@@ -122,6 +122,15 @@ namespace eval portindex::sqlite {
                        ON DELETE CASCADE
                        ON UPDATE CASCADE
                 );
+                CREATE TABLE IF NOT EXISTS $database.dependencies (
+                      port_id INTEGER NOT NULL
+                    , type INTEGER NOT NULL
+                    , dependency TEXT NOT NULL
+                    , PRIMARY KEY (port_id, type, dependency)
+                    , FOREIGN KEY (port_id) REFERENCES portindex (id)
+                       ON DELETE CASCADE
+                       ON UPDATE CASCADE
+                );
                 CREATE TABLE IF NOT EXISTS $database.portindex (
                       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
                     , port TEXT COLLATE NOCASE UNIQUE NOT NULL
@@ -307,11 +316,93 @@ namespace eval portindex::sqlite {
     proc call_list_proc {callback portinforef} {
         upvar $portinforef portinfo
 
-        $callback categories  category    categories  portinfo
-        $callback licenses    license     license     portinfo
-        $callback maintainers maintainer  maintainers portinfo
-        $callback platforms   platform    platforms   portinfo
-        $callback variants    variant     variants    portinfo
+        eval $callback categories  category    categories  portinfo
+        eval $callback licenses    license     license     portinfo
+        eval $callback maintainers maintainer  maintainers portinfo
+        eval $callback platforms   platform    platforms   portinfo
+        eval $callback variants    variant     variants    portinfo
+    }
+
+    # Insert all dependencies into the portindex database. Parameter is a reference to the portinfo
+    # array.
+    proc insert_dependencies {portinforef} {
+        variable db
+
+        upvar $portinforef portinfo
+
+        foreach type {fetch extract build lib run} {
+            if {![info exists portinfo(depends_$type)]} {
+                # if there's no categories, variants, etc.
+                continue
+            }
+
+            foreach value $portinfo(depends_$type) {
+                db eval {
+                    INSERT INTO dependencies (
+                          port_id
+                        , type
+                        , dependency
+                    ) VALUES (
+                          $portinfo(id)
+                        , $type
+                        , $value
+                    )
+                }
+            }
+        }
+    }
+
+    # Update dependencies in the portindex database. Parameter is a reference to the portinfo array.
+    proc update_dependencies {table field portinfofield portinforef} {
+        variable db
+
+        upvar $portinforef portinfo
+
+        foreach type {fetch extract build lib run} {
+            if {![info exists portinfo(depends_$type)]} {
+                # we have an empty list
+                # make sure the database is empty for this combination, too
+                db eval {DELETE FROM dependencies WHERE port_id = $portinfo(id) AND type = $type}
+                continue
+            }
+
+            # Get old and new entries to generate a set of diffs
+            set oldentries [db eval {SELECT dependency FROM tmpdb.dependencies WHERE port_id = $portinfo(id) AND type = $type}]
+            set newentries $portinfo(depends_$type)
+
+            set added   [list]
+            set deleted [list]
+
+            # find out which elements have been removed or added
+            foreach newentry $newentries {
+                if {[lsearch -exact $oldentries $newentry] == -1} {
+                    lappend added $newentry
+                }
+            }
+            foreach oldentry $oldentries {
+                if {![lsearch -exact $newentries $oldentry] == -1} {
+                    lappend deleted $oldentry
+                }
+            }
+
+            # and delete/add them
+            foreach del $deleted {
+                db eval {DELETE FROM dependencies WHERE port_id = $portinfo(id) AND type = $type AND dependency = $del}
+            }
+            foreach add $added {
+                db eval {
+                    INSERT INTO dependencies (
+                          port_id
+                        , type
+                        , dependency
+                    ) VALUES (
+                          $portinfo(id)
+                        , $type
+                        , $add
+                    )
+                }
+            }
+        }
     }
 
     # Helper function to write an entry
@@ -360,6 +451,7 @@ namespace eval portindex::sqlite {
             }
             set portinfo(id) [db last_insert_rowid]
             call_list_proc insert_list portinfo
+            insert_dependencies portinfo
         } else {
             # update the existing entry
             db eval {
@@ -381,6 +473,7 @@ namespace eval portindex::sqlite {
                     id                  = $portinfo(id)
             }
             call_list_proc update_list portinfo
+            update_dependencies portinfo
         }
     }
 
