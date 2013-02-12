@@ -95,7 +95,7 @@ namespace eval portindex::tcl {
     namespace export update
     proc update {outdir script} {
         init ${outdir}
-        ${script}
+        eval ${script}
         finish
     }
 
