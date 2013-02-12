@@ -65,8 +65,9 @@ proc option {option args} {
     # the Portfile's interpreter and the target's interpreters.
     global $option
     if {[llength $args] > 0} {
-        ui_debug "setting option $option to $args"
-        set $option [lindex $args 0]
+        ui_debug "setting option $option to [lindex $args 0]"
+        set $option {}
+        set_union $option [lindex $args 0]
     }
     return [set $option]
 }
@@ -84,6 +85,24 @@ proc exists {option} {
     return [info exists $option]
 }
 
+proc set_union {option args} {
+    global $option
+
+    foreach val $args {
+        if {[lsearch -exact [set $option] $val] == -1} {
+            lappend $option $val
+        }
+    }
+}
+
+proc set_difference {option args} {
+    global $option
+
+    foreach val $args {
+        set $option [lsearch -all -inline -not -exact [set $option] $val]
+    }
+}
+
 ##
 # Handle an option
 #
@@ -93,7 +112,8 @@ proc handle_option {option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)]} {
-        set $option $args
+        set $option {}
+        set_union $option $args
     }
 }
 
@@ -106,11 +126,10 @@ proc handle_option-append {option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)]} {
-        if {[info exists $option]} {
-            set $option [concat [set $option] $args]
-        } else {
-            set $option $args
+        if {![info exists $option]} {
+            set $option {}
         }
+        set_union $option $args
     }
 }
 
@@ -123,11 +142,7 @@ proc handle_option-delete {option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)] && [info exists $option]} {
-        set temp [set $option]
-        foreach val $args {
-            set temp [ldelete $temp $val]
-        }
-        set $option $temp
+        set_difference $option $args
     }
 }
 
@@ -144,7 +159,7 @@ proc handle_option-strsed {option args} {
         foreach val $args {
             set temp [strsed $temp $val]
         }
-        set $option $temp
+        set $option [lsort -unique $temp]
     }
 }
 
@@ -156,24 +171,18 @@ proc handle_option-strsed {option args} {
 proc handle_option-replace {option args} {
     global $option user_options option_procs deprecated_options
 
-    # Deprecate -replace with only one argument, for backwards compatibility call -strsed
-    # XXX: Remove this in 2.2.0
-    if {[llength $args] == 1} {
-        if {![info exists deprecated_options(${option}-replace)]} {
-            set deprecated_options(${option}-replace) [list ${option}-strsed 0]
-        }
-        set refcount [lindex $deprecated_options(${option}-replace) 1]
-        lset deprecated_options(${option}-replace) 1 [expr $refcount + 1]
-        return [eval handle_option-strsed $option $args]
-    }
-
     if {![info exists user_options($option)] && [info exists $option]} {
         foreach {old new} $args {
             set index [lsearch -exact [set $option] $old]
             if {$index == -1} {
                 continue
             }
-            set $option [lreplace [set $option] $index $index $new]
+            # only add the replacement if it isn't in the list yet
+            if {[lsearch -exact [set $option] $new] != -1} {
+                set $option [lreplace [set $option] $index $index $new]
+            } else {
+                set $option [lreplace [set $option] $index $index]
+            }
         }
     }
 }
