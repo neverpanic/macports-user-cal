@@ -2,6 +2,7 @@ TCLPKG=		@OUR_INCLUDED_PACKAGES@ \
 			cregistry \
 			macports1.0 \
 			port1.0 \
+			portindex1.0 \
 			package1.0 \
 			pextlib1.0 \
 			registry2.0 \

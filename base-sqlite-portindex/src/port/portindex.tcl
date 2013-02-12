@@ -10,13 +10,12 @@ exec @TCLSH@ "$0" "$@"
 source [file join "@macports_tcl_dir@" macports1.0 macports_fastload.tcl]
 package require macports
 package require Pextlib
+package require portindex
+
 
 # Globals
 set archive 0
 set full_reindex 0
-set stats(total) 0
-set stats(failed) 0
-set stats(skipped) 0
 array set ui_options        [list]
 array set global_options    [list]
 array set global_variations [list]
@@ -30,145 +29,15 @@ proc print_usage args {
     global argv0
     puts "Usage: $argv0 \[-adf\] \[-p plat_ver_arch\] \[-o output directory\] \[directory\]"
     puts "-a:\tArchive port directories (for remote sites). Requires -o option"
-    puts "-o:\tOutput all files to specified directory"
     puts "-d:\tOutput debugging information"
     puts "-f:\tDo a full re-index instead of updating"
+    puts "-o:\tOutput all files to specified directory"
     puts "-p:\tPretend to be on another platform"
+    puts "-s:\tGenerate SQLite-based PortIndex, disables generation of Tcl-based index"
 }
 
-proc pindex {portdir} {
-    global target oldfd oldmtime newest qindex fd directory archive outdir stats full_reindex \
-           ui_options port_options save_prefix keepkeys
-
-    # try to reuse the existing entry if it's still valid
-    if {$full_reindex != "1" && $archive != "1" && [info exists qindex([string tolower [file tail $portdir]])]} {
-        try {
-            set mtime [file mtime [file join $directory $portdir Portfile]]
-            if {$oldmtime >= $mtime} {
-                set offset $qindex([string tolower [file tail $portdir]])
-                seek $oldfd $offset
-                gets $oldfd line
-                set name [lindex $line 0]
-                set len [lindex $line 1]
-                set line [read $oldfd $len]
-
-                if {[info exists ui_options(ports_debug)]} {
-                    puts "Reusing existing entry for $portdir"
-                }
-
-                puts $fd [list $name $len]
-                puts -nonewline $fd $line
-
-                incr stats(skipped)
-
-                # also reuse the entries for its subports
-                array set portinfo $line
-                if {![info exists portinfo(subports)]} {
-                    return
-                }
-                foreach sub $portinfo(subports) {
-                    set offset $qindex([string tolower $sub])
-                    seek $oldfd $offset
-                    gets $oldfd line
-                    set name [lindex $line 0]
-                    set len [lindex $line 1]
-                    set line [read $oldfd $len]
-    
-                    puts $fd [list $name $len]
-                    puts -nonewline $fd $line
-    
-                    incr stats(skipped)
-                }
-
-                return
-            }
-        } catch {*} {
-            ui_warn "failed to open old entry for ${portdir}, making a new one"
-        }
-    }
-
-    incr stats(total)
-    set prefix {\${prefix}}
-    if {[catch {set interp [mportopen file://[file join $directory $portdir] $port_options]} result]} {
-        puts stderr "Failed to parse file $portdir/Portfile: $result"
-        # revert the prefix.
-        set prefix $save_prefix
-        incr stats(failed)
-    } else {
-        # revert the prefix.
-        set prefix $save_prefix
-        array set portinfo [mportinfo $interp]
-        mportclose $interp
-        set portinfo(portdir) $portdir
-        puts "Adding port $portdir"
-        if {$archive == "1"} {
-            if {![file isdirectory [file join $outdir [file dirname $portdir]]]} {
-                if {[catch {file mkdir [file join $outdir [file dirname $portdir]]} result]} {
-                    puts stderr "$result"
-                    exit 1
-                }
-            }
-            set portinfo(portarchive) [file join [file dirname $portdir] [file tail $portdir]].tgz
-            cd [file join $directory [file dirname $portinfo(portdir)]]
-            puts "Archiving port $portinfo(name) to [file join $outdir $portinfo(portarchive)]"
-            set tar [macports::findBinary tar $macports::autoconf::tar_path]
-            set gzip [macports::findBinary gzip $macports::autoconf::gzip_path]
-            if {[catch {exec $tar -cf - [file tail $portdir] | $gzip -c >[file join $outdir $portinfo(portarchive)]} result]} {
-                puts stderr "Failed to create port archive $portinfo(portarchive): $result"
-                exit 1
-            }
-        }
-
-        foreach availkey [array names portinfo] {
-            # store list of subports for top-level ports only
-            if {![info exists keepkeys($availkey)] && $availkey != "subports"} {
-                unset portinfo($availkey)
-            }
-        }
-        set output [array get portinfo]
-        set len [expr [string length $output] + 1]
-        puts $fd [list $portinfo(name) $len]
-        puts $fd $output
-        set mtime [file mtime [file join $directory $portdir Portfile]]
-        if {$mtime > $newest} {
-            set newest $mtime
-        }
-        # now index this portfile's subports (if any)
-        if {![info exists portinfo(subports)]} {
-            return
-        }
-        foreach sub $portinfo(subports) {
-            incr stats(total)
-            set prefix {\${prefix}}
-            if {[catch {set interp [mportopen file://[file join $directory $portdir] [concat $port_options subport $sub]]} result]} {
-                puts stderr "Failed to parse file $portdir/Portfile with subport '${sub}': $result"
-                set prefix $save_prefix
-                incr stats(failed)
-            } else {
-                set prefix $save_prefix
-                array unset portinfo
-                array set portinfo [mportinfo $interp]
-                mportclose $interp
-                set portinfo(portdir) $portdir
-                puts "Adding subport $sub"
-                foreach availkey [array names portinfo] {
-                    if {![info exists keepkeys($availkey)]} {
-                        unset portinfo($availkey)
-                    }
-                }
-                set output [array get portinfo]
-                set len [expr [string length $output] + 1]
-                puts $fd [list $portinfo(name) $len]
-                puts $fd $output
-            }
-        }
-    }
-}
-
-if {[expr $argc > 8]} {
-    print_usage
-    exit 1
-}
+# default index types is Tcl
+set index_type tcl
 
 for {set i 0} {$i < $argc} {incr i} {
     set arg [lindex $argv $i]
@@ -194,6 +63,8 @@ for {set i 0} {$i < $argc} {incr i} {
                 lappend port_options os.platform $os_platform os.major $os_major os.arch $os_arch
             } elseif {$arg == "-f"} { # Completely rebuild index
                 set full_reindex 1
+            } elseif {$arg == "-s"} { # Use SQLite, disable Tcl index
+                set index_type sqlite
             } else {
                 puts stderr "Unknown option: $arg"
                 print_usage
@@ -240,41 +111,12 @@ if {[info exists outdir]} {
     set outdir $directory
 }
 
-puts "Creating port index in $outdir"
-set outpath [file join $outdir PortIndex]
-# open old index for comparison
-if {[file isfile $outpath] && [file isfile ${outpath}.quick]} {
-    set oldmtime [file mtime $outpath]
-    set newest $oldmtime
-    if {![catch {set oldfd [open $outpath r]}] && ![catch {set quickfd [open ${outpath}.quick r]}]} {
-        if {![catch {set quicklist [read $quickfd]}]} {
-            foreach entry [split $quicklist "\n"] {
-                set qindex([lindex $entry 0]) [lindex $entry 1]
-            }
-        }
-        close $quickfd
-    }
-} else {
-    set newest 0
-}
+portindex::set_portindex_type ${index_type}
 
-set tempportindex [mktemp "/tmp/mports.portindex.XXXXXXXX"]
-set fd [open $tempportindex w]
-set save_prefix ${macports::prefix}
-foreach key {categories depends_fetch depends_extract depends_build \
-             depends_lib depends_run description epoch homepage \
-             long_description maintainers name platforms revision variants \
-             version portdir portarchive replaced_by license installs_libs} {
-    set keepkeys($key) 1
-}
-mporttraverse pindex $directory
-if {[info exists oldfd]} {
-    close $oldfd
-}
-close $fd
-file rename -force $tempportindex $outpath
-file mtime $outpath $newest
-mports_generate_quickindex $outpath
+puts "Creating ${index_type} port index in $outdir"
+portindex::update ${outdir} [namespace code {mporttraverse [portindex::callback] $directory}]
+
+array set stats [portindex::statistics]
 puts "\nTotal number of ports parsed:\t$stats(total)\
       \nPorts successfully parsed:\t[expr $stats(total) - $stats(failed)]\
       \nPorts failed:\t\t\t$stats(failed)\
