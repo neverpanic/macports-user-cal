@@ -250,10 +250,9 @@ namespace eval portindex::sqlite {
         }
     }
 
-    # Update a list-type field in the portindex database. See insert_list for
-    # examples of list-type fields. Parameters are the name of the table
-    # holding the list, the name of the field (both in the portinfo array and
-    # in the database table) and a reference to the portinfo array.
+    # Update a list-type field in the portindex database. See insert_list for examples of list-type
+    # fields. Parameters are the name of the table holding the list, the name of the field (both in
+    # the portinfo array and in the database table) and a reference to the portinfo array.
     proc update_list {table field portinfofield portinforef} {
         variable db
 
@@ -303,8 +302,8 @@ namespace eval portindex::sqlite {
         }
     }
 
-    # Call a given callback function a couple of times, once for each list-type
-    # field, passing the required parameters.
+    # Call a given callback function a couple of times, once for each list-type field, passing the
+    # required parameters.
     proc call_list_proc {callback portinforef} {
         upvar $portinforef portinfo
 
@@ -316,9 +315,8 @@ namespace eval portindex::sqlite {
     }
 
     # Helper function to write an entry
-    # Given an array reference to portinfo (portinforef), the mtime of the
-    # portfile and the parent port (if this port is a subport), insert an entry
-    # into the index.
+    # Given an array reference to portinfo (portinforef), the mtime of the portfile and the parent
+    # port (if this port is a subport), insert an entry into the index.
     proc pindex_write_entry {portinforef mtime {parentport {}}} {
         variable db
 
@@ -386,20 +384,8 @@ namespace eval portindex::sqlite {
         }
     }
 
-    # Helper function to read an entry from the previous PortIndex
-    proc pindex_read_entry {portinforef portname} {
-        variable db
-
-        upvar $portinforef portinfo
-        array set portinfo {}
-
-        # TODO: Query info from the database
-        error "unimplemented"
-    }
-
     # Callback returned by the portindex::tcl::callback procedure
-    # Actually decides whether to re-evluate a Portfile and writes the index
-    # file
+    # Actually decides whether to re-evluate a Portfile and writes the index file
     proc pindex {portdir} {
         variable db
         variable oldmtime
@@ -478,8 +464,8 @@ namespace eval portindex::sqlite {
         }
     }
 
-    # Returns a callback suitable to be passed to mporttraverse, which will
-    # generate the portindex of this specific type.
+    # Returns a callback suitable to be passed to mporttraverse, which will generate the portindex
+    # of this specific type.
     namespace export callback
     proc callback {} {
         return [namespace code {pindex}]
