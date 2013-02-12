@@ -1694,7 +1694,7 @@ proc mporttraverse {func {root .}} {
                 if {[file isdirectory $pathToPort] &&
                   [file exists [file join $pathToPort "Portfile"]]} {
                     # Call the function.
-                    $func [file join $category $port]
+                    eval $func [file join $category $port]
 
                     # Restore the current directory because some
                     # functions changes it.
