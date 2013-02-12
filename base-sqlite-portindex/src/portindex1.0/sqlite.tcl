@@ -416,27 +416,21 @@ namespace eval portindex::sqlite {
         if {$full_reindex != "1"} {
             set port_id [db onecolumn {SELECT id FROM tmpdb.portindex WHERE portdir = $portdir AND parentport = ""}]
             if {$port_id != ""} {
-                try {
-                    if {$oldmtime >= $mtime} {
-                        if {[info exists ui_options(ports_debug)]} {
-                            puts "Reusing existing entry for $portdir"
-                        }
-
-                        # Re-using an entry in SQLite-based PortIndex is as easy as
-                        # doing nothing.
-                        # We need to mark the entries as valid to prevent them
-                        # from being garbage collected, though.
-                        # We'll do this for this port and all its subports at
-                        # once.
-                        [db eval {UPDATE portindex SET colorbit = 1 WHERE portdir = $portdir}]
-
-                        # Add the number of changes entries to the skip count
-                        portindex::inc_skipped [db changes]
-
-                        return
+                if {$oldmtime >= $mtime} {
+                    if {[info exists ui_options(ports_debug)]} {
+                        puts "Reusing existing entry for $portdir"
                     }
-                } catch {*} {
-                    ui_warn "Failed to re-use old entry for ${portdir}, making a new one"
+
+                    # Re-using an entry in SQLite-based PortIndex is as easy as doing nothing.
+                    # We need to mark the entries as valid to prevent them from being garbage
+                    # collected, though.
+                    # We'll do this for this port and all its subports at once.
+                    db eval {UPDATE portindex SET colorbit = 1 WHERE portdir = $portdir}
+
+                    # Add the number of changes entries to the skip count
+                    portindex::inc_skipped [db changes]
+
+                    return
                 }
             }
         }
