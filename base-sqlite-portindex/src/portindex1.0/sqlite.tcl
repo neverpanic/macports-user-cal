@@ -184,11 +184,11 @@ namespace eval portindex::sqlite {
         }
         create_database tmpdb
 
-        if {[catch {set version [db onecolumn {SELECT version FROM portindex_version}]} result]} {
+        if {[catch {set version [db onecolumn {SELECT version FROM main.portindex_version}]} result]} {
             switch -exact [db errorcode] {
                 1 {
                     # SQLITE_ERROR, SQL error or missing database
-                    if {[regexp {^no such table: portindex_version} $result]} {
+                    if {[regexp {^no such table:} $result]} {
                         # Database hasn't been created yet.
                         create_database main
                     }
@@ -224,17 +224,17 @@ namespace eval portindex::sqlite {
     # platforms. Parameters are the name of the table holding the list, the
     # name of the field (both in the portinfo array and in the database table)
     # and a reference to the portinfo array.
-    proc insert_list {table field portinforef} {
+    proc insert_list {table field portinfofield portinforef} {
         variable db
 
         upvar $portinforef portinfo
 
-        if {![info exists portinfo($field)]} {
-            # if there's not categories, variants, etc.
+        if {![info exists portinfo($portinfofield)]} {
+            # if there's no categories, variants, etc.
             return
         }
 
-        foreach value $portinfo($field) {
+        foreach value $portinfo($portinfofield) {
             db eval "
                 INSERT INTO
                     $table
@@ -253,12 +253,12 @@ namespace eval portindex::sqlite {
     # examples of list-type fields. Parameters are the name of the table
     # holding the list, the name of the field (both in the portinfo array and
     # in the database table) and a reference to the portinfo array.
-    proc update_list {table field portinforef} {
+    proc update_list {table field portinfofield portinforef} {
         variable db
 
         upvar $portinforef portinfo
 
-        if {![info exists portinfo($field)]} {
+        if {![info exists portinfo($portinfofield)]} {
             # we have an empty list
             # make sure the database is empty for this combination, too
             db eval "
@@ -279,7 +279,7 @@ namespace eval portindex::sqlite {
             WHERE
                 port_id = :portinfo(id)
         "]
-        set newentries $portinfo($field)
+        set newentries $portinfo($portinfofield)
 
         set added   [list]
         set deleted [list]
@@ -319,6 +319,18 @@ namespace eval portindex::sqlite {
                 )
             "
         }
+    }
+
+    # Call a given callback function a couple of times, once for each list-type
+    # field, passing the required parameters.
+    proc call_list_proc {callback portinforef} {
+        upvar $portinforef portinfo
+
+        $callback categories  category    categories  portinfo
+        $callback licenses    license     license     portinfo
+        $callback maintainers maintainer  maintainers portinfo
+        $callback platforms   platform    platforms   portinfo
+        $callback variants    variant     variants    portinfo
     }
 
     # Helper function to write an entry
@@ -373,11 +385,7 @@ namespace eval portindex::sqlite {
                 )
             }
             set portinfo(id) [db last_insert_rowid]
-            insert_list categories  category    portinfo
-            insert_list licenses    license     portinfo
-            insert_list maintainers maintainer  portinfo
-            insert_list platforms   platform    portinfo
-            insert_list variants    variant     portinfo
+            call_list_proc insert_list portinfo
         } else {
             # update the existing entry
             db eval {
@@ -398,11 +406,7 @@ namespace eval portindex::sqlite {
                 WHERE
                     id                  = $portinfo(id)
             }
-            update_list categories  category    portinfo
-            update_list licenses    license     portinfo
-            update_list maintainers maintainer  portinfo
-            update_list platforms   platform    portinfo
-            update_list variants    variant     portinfo
+            call_list_proc update_list portinfo
         }
     }
 
