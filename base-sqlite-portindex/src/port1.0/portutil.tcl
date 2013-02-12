@@ -85,8 +85,10 @@ proc exists {option} {
     return [info exists $option]
 }
 
-proc set_union {option args} {
+proc set_union {option argsref} {
     global $option
+
+    upvar $argsref args
 
     foreach val $args {
         if {[lsearch -exact [set $option] $val] == -1} {
@@ -95,8 +97,10 @@ proc set_union {option args} {
     }
 }
 
-proc set_difference {option args} {
+proc set_difference {option argsref} {
     global $option
+
+    upvar $argsref args
 
     foreach val $args {
         set $option [lsearch -all -inline -not -exact [set $option] $val]
@@ -113,7 +117,7 @@ proc handle_option {option args} {
 
     if {![info exists user_options($option)]} {
         set $option {}
-        set_union $option $args
+        set_union $option args
     }
 }
 
@@ -129,7 +133,7 @@ proc handle_option-append {option args} {
         if {![info exists $option]} {
             set $option {}
         }
-        set_union $option $args
+        set_union $option args
     }
 }
 
@@ -142,7 +146,7 @@ proc handle_option-delete {option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)] && [info exists $option]} {
-        set_difference $option $args
+        set_difference $option args
     }
 }
 
