@@ -162,7 +162,8 @@ foreach tool {cc cxx objc f77 f90 fc} {
     default configure.${tool}_archflags  "\[portconfigure::configure_get_archflags $tool\]"
 }
 
-options configure.universal_archs configure.universal_args configure.universal_cflags configure.universal_cppflags configure.universal_cxxflags configure.universal_ldflags
+options -setsemantics configure.universal_archs
+options configure.universal_args configure.universal_cflags configure.universal_cppflags configure.universal_cxxflags configure.universal_ldflags
 default configure.universal_archs       {[portconfigure::choose_supported_archs ${universal_archs}]}
 default configure.universal_args        {--disable-dependency-tracking}
 default configure.universal_cflags      {[portconfigure::configure_get_universal_cflags]}
@@ -173,8 +174,8 @@ default configure.universal_ldflags     {[portconfigure::configure_get_universal
 # Select a distinct compiler (C, C preprocessor, C++)
 options configure.ccache configure.distcc configure.pipe configure.cc \
         configure.cxx configure.cpp configure.objc configure.f77 \
-        configure.f90 configure.fc configure.javac configure.compiler \
-        compiler.blacklist compiler.whitelist compiler.fallback
+        configure.f90 configure.fc configure.javac configure.compiler
+options -setsemantics compiler.blacklist compiler.whitelist compiler.fallback
 default configure.ccache        {${configureccache}}
 default configure.distcc        {${configuredistcc}}
 default configure.pipe          {${configurepipe}}
