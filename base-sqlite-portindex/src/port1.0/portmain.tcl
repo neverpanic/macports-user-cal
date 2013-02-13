@@ -47,17 +47,17 @@ namespace eval portmain {
 set_ui_prefix
 
 # define options
-options prefix name version revision epoch long_description description \
-        homepage notes provides replaced_by worksrcdir filesdir distname \
-        portdbpath libpath distpath sources_conf os.platform os.subplatform \
-        os.version os.major os.arch os.endian install.user install.group \
-        macosx_deployment_target universal_variant os.universal_supported \
-        installs_libs copy_log_files compiler.cpath compiler.library_path \
+options prefix name version revision epoch long_description description\
+        homepage notes provides replaced_by worksrcdir filesdir distname\
+        portdbpath libpath distpath sources_conf os.platform os.subplatform\
+        os.version os.major os.arch os.endian install.user install.group\
+        macosx_deployment_target universal_variant os.universal_supported\
+        installs_libs copy_log_files compiler.cpath compiler.library_path\
         add_users altprefix
 # and options that behave like sets
-options -setsemantics \
-        categories maintainers license conflicts platforms \
-        default_variants supported_archs depends_skip_archcheck \
+options -setsemantics\
+        categories maintainers license conflicts platforms\
+        default_variants supported_archs depends_skip_archcheck\
         license_noconflict
 
 # Order of option_proc and option_export matters. Filter before exporting.
