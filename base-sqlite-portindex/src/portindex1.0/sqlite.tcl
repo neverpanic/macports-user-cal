@@ -215,12 +215,13 @@ namespace eval portindex::sqlite {
         } else {
             # Create an in-memory copy of the database, for lookup speed.
             db eval {
-                INSERT INTO tmpdb.portindex   SELECT * FROM main.portindex;
-                INSERT INTO tmpdb.variants    SELECT * FROM main.variants;
-                INSERT INTO tmpdb.categories  SELECT * FROM main.categories;
-                INSERT INTO tmpdb.maintainers SELECT * FROM main.maintainers;
-                INSERT INTO tmpdb.platforms   SELECT * FROM main.platforms;
-                INSERT INTO tmpdb.licenses    SELECT * FROM main.licenses;
+                INSERT INTO tmpdb.portindex    SELECT * FROM main.portindex;
+                INSERT INTO tmpdb.variants     SELECT * FROM main.variants;
+                INSERT INTO tmpdb.categories   SELECT * FROM main.categories;
+                INSERT INTO tmpdb.maintainers  SELECT * FROM main.maintainers;
+                INSERT INTO tmpdb.platforms    SELECT * FROM main.platforms;
+                INSERT INTO tmpdb.licenses     SELECT * FROM main.licenses;
+                INSERT INTO tmpdb.dependencies SELECT * FROM main.dependencies;
             }
         }
 
@@ -353,7 +354,7 @@ namespace eval portindex::sqlite {
     }
 
     # Update dependencies in the portindex database. Parameter is a reference to the portinfo array.
-    proc update_dependencies {table field portinfofield portinforef} {
+    proc update_dependencies {portinforef} {
         variable db
 
         upvar $portinforef portinfo
