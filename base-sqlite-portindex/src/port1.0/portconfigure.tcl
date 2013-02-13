@@ -175,8 +175,8 @@ default configure.universal_ldflags     {[portconfigure::configure_get_universal
 options configure.ccache configure.distcc configure.pipe configure.cc \
         configure.cxx configure.cpp configure.objc configure.f77 \
         configure.f90 configure.fc configure.javac configure.compiler \
-        compiler.fallback
-options -setsemantics compiler.blacklist compiler.whitelist
+        compiler.fallback compiler.whitelist
+options -setsemantics compiler.blacklist
 default configure.ccache        {${configureccache}}
 default configure.distcc        {${configuredistcc}}
 default configure.pipe          {${configurepipe}}
