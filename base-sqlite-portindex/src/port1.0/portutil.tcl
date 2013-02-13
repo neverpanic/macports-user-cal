@@ -67,7 +67,8 @@ proc option {option args} {
     if {[llength $args] > 0} {
         ui_debug "setting option $option to [lindex $args 0]"
         set $option {}
-        set_union $option [lindex $args 0]
+        set args0 [lindex $args 0]
+        set_union $option args0
     }
     return [set $option]
 }
@@ -110,52 +111,89 @@ proc set_difference {option argsref} {
 ##
 # Handle an option
 #
+# @param type type of the option (list or set)
 # @param option name of the option
 # @param args arguments
-proc handle_option {option args} {
+proc handle_option {type option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)]} {
-        set $option {}
-        set_union $option args
+        switch $type {
+            -setsemantics {
+                set $option [lsort -unique $args]
+            }
+            -listsemantics {
+                set $option $args
+            }
+            default {
+                error "Invalid value ${type} for type argument in ${option}"
+            }
+        }
     }
 }
 
 ##
 # Handle option-append
 #
+# @param type type of the option (list or set)
 # @param option name of the option
 # @param args arguments
-proc handle_option-append {option args} {
+proc handle_option-append {type option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)]} {
         if {![info exists $option]} {
             set $option {}
         }
-        set_union $option args
+        switch $type {
+            -setsemantics {
+                set_union $option args
+            }
+            -listsemantics {
+                set $option [concat [set $option] $args]
+            }
+            default {
+                error "Invalid value ${type} for type argument in ${option}-append"
+            }
+        }
     }
 }
 
 ##
 # Handle option-delete
 #
+# @param type type of the option (list or set)
 # @param option name of the option
 # @param args arguments
-proc handle_option-delete {option args} {
+proc handle_option-delete {type option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)] && [info exists $option]} {
-        set_difference $option args
+        switch $type {
+            -setsemantics {
+                set_difference $option args
+            }
+            -listsemantics {
+                set temp [set $option]
+                foreach val $args {
+                    set temp [ldelete $temp $val]
+                }
+                set $option $temp
+            }
+            default {
+                error "Invalid value ${type} for type argument in ${option}-delete"
+            }
+        }
     }
 }
 
 ##
 # Handle option-strsed
 #
+# @param type type of the option (list or set)
 # @param option name of the option
 # @param args arguments
-proc handle_option-strsed {option args} {
+proc handle_option-strsed {type option args} {
     global $option user_options option_procs
 
     if {![info exists user_options($option)] && [info exists $option]} {
@@ -163,17 +201,40 @@ proc handle_option-strsed {option args} {
         foreach val $args {
             set temp [strsed $temp $val]
         }
-        set $option [lsort -unique $temp]
+        switch $type {
+            -setsemantics {
+                set $option [lsort -unique $temp]
+            }
+            -listsemantics {
+                set $option $temp
+            }
+            default {
+                error "Invalid value ${type} for type argument in ${option}-strsed"
+            }
+        }
     }
 }
 
 ##
 # Handle option-replace
 #
+# @param type type of the option (list or set)
 # @param option name of the option
 # @param args arguments
-proc handle_option-replace {option args} {
+proc handle_option-replace {type option args} {
     global $option user_options option_procs deprecated_options
+    
+    switch $type {
+        -setsemantics {
+            set is_set 1
+        }
+        -listsemantics {
+            set is_set 0
+        }
+        default {
+            error "Invalid value ${type} for type argument in ${option}-replace"
+        }
+    }
 
     if {![info exists user_options($option)] && [info exists $option]} {
         foreach {old new} $args {
@@ -181,8 +242,9 @@ proc handle_option-replace {option args} {
             if {$index == -1} {
                 continue
             }
-            # only add the replacement if it isn't in the list yet
-            if {[lsearch -exact [set $option] $new] != -1} {
+            # only add the replacement if it isn't in the list yet (or the
+            # option is a list after all)
+            if {${is_set} == 0 || [lsearch -exact [set $option] $new] != -1} {
                 set $option [lreplace [set $option] $index $index $new]
             } else {
                 set $option [lreplace [set $option] $index $index]
@@ -197,14 +259,31 @@ proc handle_option-replace {option args} {
 # and "date" that set global variables "name" and "date", respectively
 # When an option is modified in any way, options::$option is called,
 # if it exists
+# Accepts two flags -listsemantics and -setsemantics changing whether the
+# option behaves like a list (i.e. order matters, duplicate values are
+# allowed), or a set (where the order doesn't matter and duplicate values are
+# automatically removed). If you don't specify a flag, it defaults to
+# -listsemantics for backwards compatibility.
 # Arguments: <list of options>
-proc options {args} {
+proc options {{typeflag ""} args} {
+    switch $typeflag {
+        -listsemantics -
+        -setsemantics {
+            # do nothing, those are valid values
+        }
+        default {
+            # fall back to the default, which is list semantic
+            # This also means the value of ${typeflag} is an option to create!
+            set args [linsert $args 0 ${typeflag}]
+            set typeflag "-listsemantics"
+        }
+    }
     foreach option $args {
-        interp alias {} $option {} handle_option $option
-        interp alias {} $option-append {} handle_option-append $option
-        interp alias {} $option-delete {} handle_option-delete $option
-        interp alias {} $option-strsed {} handle_option-strsed $option
-        interp alias {} $option-replace {} handle_option-replace $option
+        interp alias {} $option {} handle_option $typeflag $option
+        interp alias {} $option-append {} handle_option-append $typeflag $option
+        interp alias {} $option-delete {} handle_option-delete $typeflag $option
+        interp alias {} $option-strsed {} handle_option-strsed $typeflag $option
+        interp alias {} $option-replace {} handle_option-replace $typeflag $option
     }
 }
 
