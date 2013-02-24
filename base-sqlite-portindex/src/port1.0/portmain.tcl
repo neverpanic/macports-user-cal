@@ -53,12 +53,11 @@ options prefix name version revision epoch long_description description\
         os.version os.major os.arch os.endian install.user install.group\
         macosx_deployment_target universal_variant os.universal_supported\
         installs_libs copy_log_files compiler.cpath compiler.library_path\
-        add_users altprefix
+        add_users altprefix categories
 # and options that behave like sets
 options -setsemantics\
-        categories maintainers license conflicts platforms\
-        default_variants supported_archs depends_skip_archcheck\
-        license_noconflict
+        maintainers license conflicts platforms default_variants\
+        supported_archs depends_skip_archcheck license_noconflict
 
 # Order of option_proc and option_export matters. Filter before exporting.
 
