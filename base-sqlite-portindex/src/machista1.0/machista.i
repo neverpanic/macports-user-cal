@@ -120,7 +120,7 @@ void macho_destroy_handle(struct macho_handle *INPUT);
  * such using the OUTPUT keyword, causing it to be returned as second parameter
  * of a list.
  * Also, we need to provide a valid address of a pointer for macho_parse_file to
- * write to. We could have the user to this, but instead use a typemap to create
+ * write to. We could have the user do this, but instead use a typemap to create
  * said pointer and pass a pointer to it to macho_parse_file. Using numinputs=0
  * causes SIWG to stop expecting the parameter when calling from Tcl.
  */
@@ -144,7 +144,7 @@ const char *macho_strerror(int err);
 /**
  * map macho_get_arch_name()
  * The memory for the returned char * comes from NXGetArchInfoFromCpuType(),
- * which is documentet in arch(3), without ever mentioning any memory issues. I
+ * which is documented in arch(3), without ever mentioning any memory issues. I
  * assume it's static memory, that should not be free()'d.
  */
 %rename(get_arch_name) macho_get_arch_name;
