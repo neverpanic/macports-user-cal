@@ -4139,7 +4139,6 @@ array set action_array [list \
     clean       [list action_target         [ACTION_ARGS_PORTS]] \
     test        [list action_target         [ACTION_ARGS_PORTS]] \
     lint        [list action_target         [ACTION_ARGS_PORTS]] \
-    submit      [list action_target         [ACTION_ARGS_PORTS]] \
     livecheck   [list action_target         [ACTION_ARGS_PORTS]] \
     distcheck   [list action_target         [ACTION_ARGS_PORTS]] \
     mirror      [list action_target         [ACTION_ARGS_PORTS]] \
