@@ -34,6 +34,10 @@
 package provide portindex::sqlite 1.0
 
 namespace eval portindex::sqlite {
+    ########################
+    # PortIndex generation #
+    ########################
+
     # The output directory for the PortIndex
     variable outdir
 
@@ -565,7 +569,7 @@ namespace eval portindex::sqlite {
         return [namespace code {pindex}]
     }
 
-    # Cleanup procedure called after portindex::replace.
+    # Cleanup procedure called at the end of portindex::update
     proc finish {} {
         variable db
 
@@ -573,5 +577,66 @@ namespace eval portindex::sqlite {
             DETACH DATABASE tmpdb
         }
         db close
+    }
+
+    #####################
+    # PortIndex reading #
+    #####################
+
+    # map from database names to paths
+    variable db_names
+    array set db_names {}
+
+    # map from paths to database names
+    variable dbs
+    array set dbs {}
+
+    # Checks whether a given path looks like a SQLite-indexed ports tree.
+    # Returns 1 if the given path seems to match, 0 otherwise. Never throws errors.
+    proc seems_like_valid_portindex {path} {
+        set database [file join ${path} PortIndex.db]
+
+        return [file exists ${database}]
+    }
+
+    # Open a new PortIndex. This will only be called if seems_like_valid_portindex returned 1, so
+    # assuming the checks done there came back true is possible.
+    proc open {path args} {
+        variable db_names
+        variable dbs
+
+        package require sqlite3
+
+        set database [file join ${path} PortIndex.db]
+
+        set dbname ""
+        for {set i 0} {$i < 1000} {incr i} {
+            if {[llength [info commands "portindexsqlitedb${i}"]] == 0} {
+                set dbname "portindexsqlitedb${i}"
+                break;
+            }
+        }
+        if {${dbname} == ""} {
+            error "Couldn't find a free slot to create a new database connection.\
+                Make sure you don't have a resource leak."
+        }
+
+        if {[catch {sqlite3 ${dbname} ${database}} result]} {
+            error "error opening database ${database}: ${result}"
+        }
+
+        set dbs($path) $dbname
+        set db_names($dbname) $path
+    }
+
+    # Close a PortIndex and release all resources associated with it.
+    proc release {path args} {
+        variable dbs
+        variable db_names
+
+        set dbname $dbs($path)
+        $dbs($path) close
+        unset dbs($path)
+        unset db_names($dbname)
     }
 }
