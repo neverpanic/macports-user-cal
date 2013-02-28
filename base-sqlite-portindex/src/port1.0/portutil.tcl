@@ -5,7 +5,7 @@
 # Copyright (c) 2002-2003 Apple Inc.
 # Copyright (c) 2004 Robert Shaw <rshaw@opendarwin.org>
 # Copyright (c) 2006-2007 Markus W. Weissmann <mww@macports.org>
-# Copyright (c) 2004-2012 The MacPorts Project
+# Copyright (c) 2004-2013 The MacPorts Project
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -1007,7 +1007,7 @@ proc ldelete {list value} {
 # reinplace
 # Provides "sed in place" functionality
 proc reinplace {args}  {
-    global env worksrcpath
+    global env worksrcpath macosx_version
     set extended 0
     set suppress 0
     set oldlocale_exists 0
@@ -1097,6 +1097,9 @@ proc reinplace {args}  {
                     set env(LC_CTYPE) $oldlocale
                 } else {
                     unset env(LC_CTYPE)
+                    if {$macosx_version == "10.5"} {
+                        unsetenv LC_CTYPE
+                    }
                 }
             }
             close $tmpfd
@@ -1108,6 +1111,9 @@ proc reinplace {args}  {
                 set env(LC_CTYPE) $oldlocale
             } else {
                 unset env(LC_CTYPE)
+                if {$macosx_version == "10.5"} {
+                    unsetenv LC_CTYPE
+                }
             }
         }
         close $tmpfd
@@ -1403,13 +1409,15 @@ set ports_dry_last_skipped ""
 
 proc target_run {ditem} {
     global target_state_fd workpath portpath ports_trace PortInfo ports_dryrun \
-           ports_dry_last_skipped worksrcpath prefix subport env portdbpath
+           ports_dry_last_skipped worksrcpath prefix subport env portdbpath \
+           macosx_version
     set portname $subport
     set result 0
     set skipped 0
     set procedure [ditem_key $ditem procedure]
     set savedhome [file join $portdbpath home]
     set env(HOME) "${workpath}/.home"
+    set env(TMPDIR) "${workpath}/.tmp"
 
     if {[ditem_key $ditem state] != "no"} {
         set target_state_fd [open_statefile]
@@ -1634,6 +1642,12 @@ proc target_run {ditem} {
     }
 
     set env(HOME) $savedhome
+    if {[info exists env(TMPDIR)]} {
+        unset env(TMPDIR)
+        if {$macosx_version == "10.5"} {
+            unsetenv TMPDIR
+        }
+    }
 
     return $result
 }
@@ -1750,8 +1764,16 @@ proc open_statefile {args} {
     }
 
     if {![tbool ports_dryrun]} {
-        if {![file isdirectory $workpath]} {
-            file mkdir "${workpath}/.home"
+        set need_chown 0
+        if {![file isdirectory $workpath/.home]} {
+            file mkdir $workpath/.home
+            set need_chown 1
+        }
+        if {![file isdirectory $workpath/.tmp]} {
+            file mkdir $workpath/.tmp
+            set need_chown 1
+        }
+        if {$need_chown} {
             chownAsRoot $subbuildpath
         }
         # Create a symlink to the workpath for port authors

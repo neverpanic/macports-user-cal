@@ -1,8 +1,7 @@
 # -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:filetype=tcl:et:sw=4:ts=4:sts=4
-# portconfigure.tcl
 # $Id$
 #
-# Copyright (c) 2007 - 2012 The MacPorts Project
+# Copyright (c) 2007 - 2013 The MacPorts Project
 # Copyright (c) 2007 Markus W. Weissmann <mww@macports.org>
 # Copyright (c) 2002 - 2003 Apple Inc.
 # All rights reserved.
@@ -129,7 +128,7 @@ default configure.march     {}
 default configure.mtune     {}
 # We could have debug/optimizations be global configurable at some point.
 options configure.optflags configure.cflags configure.cppflags configure.cxxflags configure.objcflags configure.ldflags configure.libs configure.fflags configure.f90flags configure.fcflags configure.classpath
-default configure.optflags  {-O2}
+default configure.optflags  {-Os}
 # compiler flags section
 default configure.cflags    {${configure.optflags}}
 default configure.cppflags  {-I${prefix}/include}
@@ -360,8 +359,7 @@ proc portconfigure::configure_get_universal_ldflags {args} {
 
 # internal proc to determine if the compiler supports -arch
 proc portconfigure::arch_flag_supported {compiler} {
-    return [expr {[string first "macports-gcc-" $compiler] != 0 &&
-                  [string first "macports-dragonegg-" $compiler] != 0}]
+    return [regexp {^gcc-4|llvm|apple|clang} $compiler]
 }
 
 # maps compiler names to the port that provides them

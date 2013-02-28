@@ -37,6 +37,7 @@ package provide macports 1.0
 package require macports_dlist 1.0
 package require macports_index 1.0
 package require macports_util 1.0
+package require portindex 1.0
 
 namespace eval macports {
     namespace export bootstrap_options user_options portinterp_options open_mports ui_priorities port_phases 
@@ -1126,6 +1127,9 @@ proc mportinit {{up_ui_options {}} {up_options {}} {up_variations {}}} {
             set macports::host_preferred($host) 1
         }
     }
+
+    #set portindex [portindex::open [macports::getportdir [lindex ${sources_default} 0]]]
+    #$portindex release
 
     # load the quick index
     _mports_load_quickindex
