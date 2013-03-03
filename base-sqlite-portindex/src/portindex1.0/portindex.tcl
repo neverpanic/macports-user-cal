@@ -33,20 +33,11 @@
 # standard package load
 package provide portindex 1.0
 
-package require portindex::tcl 1.0
-package require portindex::sqlite 1.0
+package require stooop
 
 namespace eval portindex {
 	# The type of the PortIndex implementation
 	variable portindex_type ""
-
-	# A map from path to open PortIndex
-	variable portindex_map
-	array set portindex_map {}
-
-	# A map from path to PortIndex retain count 
-	variable portindex_retain_count
-	array set portindex_retain_count {}
 
 	# Number of total ports processed in this index operation
 	variable count_total  0
@@ -77,98 +68,6 @@ namespace eval portindex {
 		}
 		namespace import ${type}::*
 		set portindex_type ${type}
-	}
-
-	# Returns a handle that can be used to query the PortIndex in the given
-	# path. Automatically selects the best available index type. Raises an
-	# error, if no index can be found.
-	# Use the handle returned by this procedure to query the portindex, by
-	# calling the methods available in portindex::${type}. Do not use this
-	# handle to modify the portindex.
-	proc open {path} {
-		variable portindex_map
-		variable portindex_retain_count
-
-		# Some sanity checks to fail early
-		if {![file exists ${path}]} {
-			error "No PortIndex found at ${path}: No such file or directory"
-		}
-		if {![file isdirectory ${path}]} {
-			error "No PortIndex found at ${path}: Not a directory"
-		}
-
-		# Check for existing PortIndex commands for this path
-		if {[info exists portindex_map($path)]} {
-			incr $portindex_retain_count($path)
-			return $portindex_map($path)
-		}
-
-		# This list defines the priority of PortIndex implementations
-		foreach type [list sqlite tcl] {
-			if {[eval ${type}::seems_like_valid_portindex ${path}]} {
-				# Found the type of PortIndex we want
-				set portindex_map($path) [create_portindex_handle ${type} ${path}]
-				set portindex_retain_count($path) 1
-				return $portindex_map($path)
-			}
-		}
-
-		# No index found
-        error "No index(es) found! Have you synced your port definitions?\
-			Try running 'port selfupdate'."
-	}
-
-	# Creates and returns a new handle that can be used like $handle command to
-	# call portindex::${type}::${command} ${path} and pass along all further
-	# arguments.
-	# After usage, this handle should be released using `$handle release`.
-	proc create_portindex_handle {type path} {
-		# Similar to what we used in registry2.0, this finds a unique command
-		# name to be used as a handle for this specific instance of the
-		# PortIndex. This is the poor man's way of OO.
-		set cmdname ""
-		for {set i 0} {$i < 1000} {incr i} {
-			if {[llength [info commands "portindexhandle${i}"]] == 0} {
-				set cmdname "portindexhandle${i}"
-				break;
-			}
-		}
-
-		if {${cmdname} == ""} {
-			error "Couldn't find a free slot to create a new PortIndex handle.\
-				Make sure you don't have a resource leak."
-		}
-
-		# Create an alias and always pass the ${path} parameter
-		interp alias {} ${cmdname} {} portindex::handle_portindex_cmd ${type} ${path}
-		# Allow running initilization code
-		eval ${cmdname} open
-
-		return ${cmdname}
-	}
-
-	# Callback called for every command to be dispatched to a certain PortIndex
-	# handler. Makes sure the command is being run in the correct namespace.
-	# Also implements `$handle release`, which uses reference counting and only
-	# calls the corresponding PortIndex implementation command, if this was the
-	# last reference.
-	proc handle_portindex_cmd {type path cmd args} {
-		variable portindex_map
-		variable portindex_retain_count
-
-		if {${cmd} == "release"} {
-			incr portindex_retain_count($path) -1
-			if {[expr $portindex_retain_count($path) > 0]} {
-				# do nothing, the reference is still valid
-				return
-			}
-			# remove command, clear command maps, call destructor
-			set command $portindex_map($path)
-			unset portindex_map($path)
-			unset portindex_retain_count($path)
-			interp alias {} ${command} {}
-		}
-		return [namespace inscope ::portindex::${type} ${cmd} ${path} ${args}]
 	}
 
 	# Increase the number of ports in total. Call this once for every port
@@ -209,4 +108,52 @@ namespace eval portindex {
 
 		return [array get statistics]
 	}
+
+    #####################
+    # PortIndex reading #
+    #####################
+
+	# Returns a handle that can be used to query the PortIndex in the given
+	# path. Automatically selects the best available index type. Raises an
+	# error, if no index can be found.
+	# Use the handle returned by this procedure to query the portindex, by
+	# calling the methods available in portindex::${type}. Do not use this
+	# handle to modify the portindex.
+	proc open {path} {
+		# Some sanity checks to fail early
+		if {![file exists ${path}]} {
+			error "No PortIndex found at ${path}: No such file or directory"
+		}
+		if {![file isdirectory ${path}]} {
+			error "No PortIndex found at ${path}: Not a directory"
+		}
+
+		# This list defines the priority of PortIndex implementations
+		foreach type [list sqlite tcl] {
+			if {[eval ${type}::reader::seems_like_valid_portindex ${path}]} {
+				# Found the type of PortIndex we want
+				if {[catch {set pi [stooop::new ${type}::reader ${path}]} result]} {
+					ui_warn "${result}. Attemping other PortIndex types."
+					continue
+				}
+				return $pi
+			}
+		}
+
+		# No index found
+		error "No (useable) index found for source ${path}. Did you run portindex?"
+	}
+
+	stooop::class reader {
+		# this is an abstract interface class. Don't instanciate it.
+		proc reader {this} {}
+		proc ~reader {this} {}
+
+        # Return a timestamp indicating when the PortIndex was last generated
+        # (and thus, when this tree was last updated).
+		stooop::virtual proc get_mtime {this}
+	}
+
+	package require portindex::sqlite 1.0
+	package require portindex::tcl 1.0
 }
