@@ -82,10 +82,23 @@ if {[file exists $sharetcldir]} {
     }
 }
 
-if { "@SQLITE3_TCL_DIR@" != "" } {
+if {"@SQLITE3_TCL_DIR@" != ""} {
     set dir "@SQLITE3_TCL_DIR@"
     set pkgindex [file join $dir pkgIndex.tcl]
     if [file exists $pkgindex] {
         source $pkgindex
+    }
+}
+
+if {"@TCLLIB_DIR@" != ""} {
+    set parentdir "@TCLLIB_DIR@"
+    # add any packages from TclLib you need here
+    foreach pkgname [list stooop] {
+        # pkgIndex.tcl uses $dir!
+        set dir [file join $parentdir $pkgname]
+        set pkgindex [file join $dir pkgIndex.tcl]
+        if [file exists $pkgindex] {
+            source $pkgindex
+        }
     }
 }
