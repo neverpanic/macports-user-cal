@@ -806,7 +806,7 @@ AC_DEFUN([MP_LIBCURL_FLAGS],[
 AC_DEFUN([MP_SQLITE3_FLAGS],[
     # first sqlite3 itself
 	AC_ARG_WITH(sqlite3prefix,
-		   [  --with-sqlite3prefix       base directory for the sqlite3 install '/usr', '/usr/local',...],
+		   [  --with-sqlite3prefix    base directory for the sqlite3 install '/usr', '/usr/local',...],
 		   [  sqlite3prefix=$withval ])
 
 	if test "x$sqlite3prefix" = "x"; then
@@ -868,6 +868,46 @@ AC_DEFUN([MP_SQLITE3_FLAGS],[
 
 	SQLITE3_TCL_DIR=$mp_cv_sqlite3_dir
 	AC_SUBST(SQLITE3_TCL_DIR)
+])
+
+# MP_TCLLIB_PATH
+#	Finds the installation of tcllib and substitutes it where required
+#
+# Arguments:
+#	None.
+#
+# Requires:
+#   tcllib in /System/Library/Tcl, /usr/lib/, /usr/share/tcltk, or user parameters to define the flags.
+#
+# Results:
+#   substitutes TCLLIB_DIR
+#---------------------------------------
+AC_DEFUN([MP_TCLLIB_PATH],[
+	AC_ARG_WITH(tcllib,
+		[  --with-tcllib           base directory for the tcllib install '/System/Library/Tcl', '/usr/share/tcltk' ...],
+		[  mp_tcllib_dir=$withval ])
+
+	if test "x$mp_tcllib_dir" = "x"; then
+		for dir in "/System/Library/Tcl" "/usr/lib" "/usr/share/tcltk"; do
+			candidate=`ls -d "${dir}/tcllib"* 2>/dev/null | sort -rn | head -n1`
+			if test -d "${candidate}"; then
+				mp_tcllib_dir=$candidate
+				break
+			fi
+		done
+	fi
+
+	AC_CACHE_CHECK([for Tcllib location], [mp_cv_tcllib_dir],
+		[
+		mp_cv_tcllib_dir=
+		test -r "${mp_tcllib_dir}/pkgIndex.tcl" && mp_cv_tcllib_dir=$mp_tcllib_dir
+		])
+
+	TCLLIB_DIR=$mp_cv_tcllib_dir
+	if test "x$TCLLIB_DIR" = "x"; then
+		AC_MSG_ERROR([cannot find tcllib])
+	fi
+	AC_SUBST(TCLLIB_DIR)
 ])
 
 dnl This macro tests if the compiler supports GCC's
