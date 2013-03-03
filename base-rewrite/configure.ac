@@ -291,6 +291,9 @@ MP_TCL_THREAD_SUPPORT
 ## libcurl
 MP_LIBCURL_FLAGS
 
+## tcllib
+MP_TCLLIB_PATH
+
 ## sqlite3
 MP_SQLITE3_FLAGS
 
@@ -392,19 +395,21 @@ AC_CONFIG_FILES([
 	Makefile
 	Mk/macports.autoconf.mk
 	doc/base.mtree
-	doc/prefix.mtree
 	doc/macosx.mtree
 	doc/macports.conf
+	doc/prefix.mtree
 	doc/pubkeys.conf
 	portmgr/freebsd/Makefile
+	setupenv.bash
 	src/Makefile
 	src/machista1.0/Makefile
 	src/macports1.0/macports_autoconf.tcl
-	src/port1.0/port_autoconf.tcl
-	src/registry2.0/registry_autoconf.tcl
-	src/programs/Makefile
 	src/macports1.0/macports_fastload.tcl
-	setupenv.bash
+	src/macports2.0/fastload.tcl
+	src/macports2.0/autoconf.tcl
+	src/port1.0/port_autoconf.tcl
+	src/programs/Makefile
+	src/registry2.0/registry_autoconf.tcl
 ])
 
 AC_CONFIG_FILES([src/pkg_mkindex.sh], [chmod +x src/pkg_mkindex.sh])
