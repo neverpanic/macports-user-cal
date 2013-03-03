@@ -1,4 +1,4 @@
-# vim:et:ts=4:tw=80
+# vim:et:ts=4:tw=100
 # tcl.tcl
 # $Id$
 #
@@ -33,7 +33,14 @@
 # standard package load
 package provide portindex::tcl 1.0
 
+package require portindex 1.0
+package require stooop
+
 namespace eval portindex::tcl {
+    ########################
+    # PortIndex generation #
+    ########################
+
     # The output directory for the PortIndex
     variable outdir
 
@@ -325,11 +332,11 @@ namespace eval portindex::tcl {
     # Generate PortIndex.quick storing offsets into PortIndex
     proc generate_quickindex {outpath} {
         if {[catch {set indexfd [open ${outpath} r]} result]} {
-            ui_warn "Can't open index file: $::errorInfo"
+            ui_warn "Can't open index file: ${result}"
             return -code error
         }
         if {[catch {set quickfd [open ${outpath}.quick w]} result]} {
-            ui_warn "Can't open quick index file: $::errorInfo"
+            ui_warn "Can't open quick index file: ${result}"
             return -code error
         }
 
@@ -349,7 +356,7 @@ namespace eval portindex::tcl {
             }
             puts -nonewline $quickfd $quicklist
         } catch {*} {
-            ui_warn "It looks like your PortIndex file $outpath may be corrupt."
+            ui_warn "It looks like your PortIndex file ${outpath} may be corrupt."
             throw
         } finally {
             close $indexfd
@@ -359,8 +366,71 @@ namespace eval portindex::tcl {
         if {[info exists quicklist]} {
             return $quicklist
         } else {
-            ui_warn "Failed to generate quick index for: $outpath"
+            ui_warn "Failed to generate quick index for: ${outpath}"
             return -code error
+        }
+    }
+
+    #####################
+    # PortIndex reading #
+    #####################
+
+    stooop::class reader {
+        # Open a new PortIndex. This will only be called if
+        # seems_like_valid_portindex returned 1, so assuming the checks done
+        # there came back positive should be safe.
+        proc reader {this path args} ::portindex::reader {} {
+            set ($this,path) $path
+            set ($this,flatfile)  [file join $path PortIndex]
+            set ($this,quickfile) [file join $path PortIndex.quick]
+
+            if {![file exists $($this,quickfile)]} {
+                error "No quick index file for source ${path} found, please run portindex ${path}."
+            }
+
+            # use lazy-loading for the PortIndex
+            set ($this,index_loaded) no
+        }
+
+        # Destructor. We don't need to anything here, because stooop
+        # automatically frees all member variables.
+        proc ~reader {this} {
+        }
+
+        # Make sure the quick index has been read into memory. Previously, this
+        # was done when first opening a source; however, I suspect in quite
+        # a number of cases the PortIndex might not be needed at all and we can
+        # avoid reading the file.
+        proc _load_portindex {this} {
+            if {$($this,index_loaded) == yes} {
+                return
+            }
+
+            if {[catch {set fd [open $($this,quickfile) r]} result]} {
+                error "Can't open quick index file for source ${($this,path)}: ${result}"
+            }
+            set ($this,quicklist) [read $fd]
+            close $fd
+
+            foreach entry [split ($this,quicklist) "\n"] {
+                set ($this,quickindex,[lindex $entry 0]) [lindex $entry 1]
+            }
+
+            set ($this,index_loaded) yes
+        }
+
+        # Return a timestamp indicating when the PortIndex was last generated
+        # (and thus, when this tree was last updated).
+        proc get_mtime {this} {
+            return [file mtime $($this,flatfile)]
+        }
+
+        # Checks whether a given path looks like a ports tree with a old-style index.
+        # Returns 1 if the given path seems to match, 0 otherwise. Never throws errors.
+        proc seems_like_valid_portindex {path} {
+            set index [file join ${path} PortIndex]
+
+            return [file exists ${index}]
         }
     }
 }
