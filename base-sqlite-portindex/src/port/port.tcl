@@ -4178,24 +4178,6 @@ proc find_action { action } {
     return $action
 }
 
-# Expand action
-# If there's more than one match, return the next possibility
-proc find_action_proc { action } {
-    global action_array
-    
-    set action_proc ""
-    if { [info exists action_array($action)] } {
-        set action_proc [lindex $action_array($action) 0]
-    } else {
-        set action [complete_action $action]
-        if { [info exists action_array($action)] } {
-            set action_proc [lindex $action_array($action) 0]
-        }
-    }
-    
-    return $action_proc
-}
-
 proc get_action_proc { action } {
     global action_array
     
