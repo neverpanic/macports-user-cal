@@ -63,99 +63,167 @@ package require macports::priority 2.0
 # \li <tt>darwintracelib 1.0</tt>, the implementation of the trace mode features
 #     in MacPorts providing isolation for builds
 namespace eval macports {
-	##
-	# Holds the architecture of the current system. Valid values are
-	# \li \c powerpc, for Power Macintosh systems
-	# \li \c i386, for Intel systems (\c i586, \c i686, \c x86_64)
-	variable os_arch [private::get_os_arch]
+    ##
+    # Holds the architecture of the current system. Valid values are
+    # \li \c powerpc, for Power Macintosh systems
+    # \li \c i386, for Intel systems (\c i586, \c i686, \c x86_64)
+    variable os_arch [private::get_os_arch]
 
-	##
-	# Contains the OS version, e.g. 12.2.0 for OS X 10.8.2 (remember Mountain
-	# Lion is darwin12)
-	variable os_version [private::get_os_version]
+    ##
+    # Contains the OS version, e.g. 12.2.0 for OS X 10.8.2 (remember Mountain
+    # Lion is darwin12)
+    variable os_version [private::get_os_version]
 
-	##
-	# Convenience variable holding the first part of \c os_version
-	variable os_major [private::get_os_major]
+    ##
+    # Convenience variable holding the first part of \c os_version
+    variable os_major [private::get_os_major]
 
-	##
-	# The endianess of the system, either \c little, or \c big, depending on the
-	# CPU type.
-	variable os_endian [private::get_os_endian]
+    ##
+    # The endianess of the system, either \c little, or \c big, depending on the
+    # CPU type.
+    variable os_endian [private::get_os_endian]
 
-	##
-	# The name of the OS of the current system in lowercase. See the output of
-	# <tt>uname -s</tt> on your system for possible values.
-	variable os_platform [private::get_os_platform]
+    ##
+    # The name of the OS of the current system in lowercase. See the output of
+    # <tt>uname -s</tt> on your system for possible values.
+    variable os_platform [private::get_os_platform]
 
-	##
-	# The OS X version number with two digits, e.g. 10.8 for Mountain Lion.
-	# Empty on platforms other than darwin.
-	variable macosx_version [private::get_macosx_version]
+    ##
+    # The OS X version number with two digits, e.g. 10.8 for Mountain Lion.
+    # Empty on platforms other than darwin.
+    variable macosx_version [private::get_macosx_version]
 
-	##
-	# The home directory of the user executing MacPorts, or a non-existant
-	# directory, if the executing user could not be determined.
-	variable user_home
+    ##
+    # The home directory of the user executing MacPorts, or a non-existant
+    # directory, if the executing user could not be determined.
+    variable user_home
 
-	##
-	# Initializes MacPorts and sets all required internal variables.
-	#
-	# \warning
-	# Call this before calling any other method in this namespace. If you call
-	# other methods or read variables without calling \c init first, the result
-	# is undefined.
-	proc init {} {
-		# set the system encoding to utf-8
-		encoding system utf-8
+    ##
+    # Initializes MacPorts and sets all required internal variables.
+    #
+    # \warning
+    # Call this before calling any other method in this namespace. If you call
+    # other methods or read variables without calling \c init first, the result
+    # is undefined.
+    proc init {} {
+        # set the system encoding to utf-8
+        encoding system utf-8
 
-		# initialize private data structures
-		private::init
+        # initialize private data structures
+        private::init
 
-		# Ensure that the macports user directory (i.e. ~/.macports) exists, if
-		# $HOME is defined. Also save $HOME for later use before replacing it
-		# with a custom home directory.
-		private::init_home
-	}
+        # Ensure that the macports user directory (i.e. ~/.macports) exists, if
+        # $HOME is defined. Also save $HOME for later use before replacing it
+        # with a custom home directory.
+        private::init_home
 
-	##
-	# Register a callback for UI communication with the client. If a callback
-	# was previously registered, it is replaced.
-	#
-	# @param[in] callback A callback function, accepting two parameters,
-	#                     priority and message. It will be called for every
-	#                     message MacPorts (or a Portfile) tries to pass to the
-	#                     user. Clients should appropriately filter by priority
-	#                     and display the message to the user.
-	proc register_ui_callback {callback} {
-		set private::ui_callback $callback
-	}
+        # Load configuration from files
+        private::init_configuration
+    }
 
-	##
-	# Frees all resources associated with this instance of MacPorts core, closes
-	# all files and releases all locks that might still be held. Just must call
-	# this after using this API.
-	#
-	# \warning
-	# Not calling this procedure might lead to memory leaks and inconsistent
-	# data in internal state files of MacPorts (e.g., the port registry).
-	proc release {} {}
+    ##
+    # Register a callback for UI communication with the client. If a callback
+    # was previously registered, it is replaced.
+    #
+    # @param[in] callback A callback function, accepting two parameters,
+    #                     priority and message. It will be called for every
+    #                     message MacPorts (or a Portfile) tries to pass to the
+    #                     user. Clients should appropriately filter by priority
+    #                     and display the message to the user.
+    proc register_ui_callback {callback} {
+        set private::ui_callback $callback
+    }
 
-	##
-	# Accessor method for UI settings
-	#
-	# @param[in] key a key identifying the setting to be queried
-	# @return 1, if the option is set, 0 otherwise
-	proc ui {key} {
-		return [util::bool private::ui_options($key)]
-	}
+    ##
+    # Frees all resources associated with this instance of MacPorts core, closes
+    # all files and releases all locks that might still be held. Just must call
+    # this after using this API.
+    #
+    # \warning
+    # Not calling this procedure might lead to memory leaks and inconsistent
+    # data in internal state files of MacPorts (e.g., the port registry).
+    proc release {} {}
 
-	##
-	# Accessor method for MacPorts settings
-	#
-	# @param[in] key a key indentifying the setting to be queried
-	# @return 1, if the option is set, 0 otherwise
-	proc option {key} {
-		return [util::bool private::global_options($key)]
-	}
+    ##
+    # Accessor method for boolean UI settings
+    #
+    # @param[in] key a key identifying the setting to be queried
+    # @return 1, if the option is set, 0 otherwise
+    proc ui_bool {key} {
+        return [util::bool [ui $key]]
+    }
+
+    ##
+    # Acessor method for UI settings
+    #
+    # @param[in] key a key identifying the setting to be queried
+    # @return the setting's value, if it exists or an empty value, if there is
+    #         no setting by that name
+    proc ui {key} {
+        if {[info exists private::ui_options($key)]} {
+            return private::ui_options($key)
+        }
+        return {}
+    }
+
+    ##
+    # Setter method for UI settings
+    #
+    # @param[in] key a key identifying the setting to be changed
+    # @param[in] value the new value to be associated with the given key
+    # @return the old value of the setting, if any. An empty value, if the key
+    #         wasn't associated with a value before
+    proc set_ui {key value} {
+        set old [ui $key]
+        set private::ui_options($key) $value
+        return $old
+    }
+
+    ##
+    # Accessor method for boolean MacPorts settings
+    #
+    # @param[in] key a key indentifying the setting to be queried
+    # @return 1, if the option is set, 0 otherwise
+    proc option_bool {key} {
+        return [util::bool [option $key]]
+    }
+
+    ##
+    # Acessor method for MacPorts settings
+    #
+    # @param[in] key a key identifying the setting to be queried
+    # @return the setting's value, if it exists or an empty value, if there is
+    #         no setting by that name
+    proc option {key} {
+        if {[info exists private::global_options($key)]} {
+            return private::global_options($key)
+        }
+        return {}
+    }
+
+    ##
+    # Setter method for MacPorts settings
+    #
+    # @param[in] key a key identifying the setting to be changed
+    # @param[in] value the new value to be associated with the key
+    # @return the setting's old value, if any, or an empty value, if the
+    #         setting was previously unset
+    proc set_option {key value} {
+        set old [option $key]
+        set private::global_options($key) $value
+        return $old
+    }
+
+    ##
+    # Acessor method for compile-time settings set by autoconf
+    #
+    # @param[in] key a key identifying the setting to be queried
+    # @return the setting's value, if it exists or an empty value, if there is
+    #         no setting by that name
+    proc autoconf {key} {
+        if {[info exists autoconf::$key]} {
+            return autoconf::$key
+        }
+        return {}
+    }
 }
