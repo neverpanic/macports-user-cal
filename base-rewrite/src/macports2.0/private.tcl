@@ -82,35 +82,35 @@ namespace eval macports::private {
     proc init_home {} {
         if {[info exists env(HOME)]} {
             macports::set_option user_home $env(HOME)
-            macports::set_option user_dir [file normalize [macports::autoconf user_dir]]
+            macports::set_option build_user_dir [file normalize [macports::autoconf build_user_dir]]
         } elseif {[info exists env(SUDO_USER)] && [get_os_platform] == "darwin"} {
             macports::set_option user_home \
-                [exec dscl -q . -read /Users/$env(SUDO_USER) NFSHomeDirectory | cut -d ' ' -f 2]
-            macports::set_option user_dir \
-                [file join [macports::option user_home] [macports::autoconf user_subdir]]
+                [exec dscl -q . -read /Users/$env(SUDO_USER) NFSHomeDirectory | cut -f 2 -d { }]
+            macports::set_option build_user_dir \
+                [file join [macports::option user_home] [macports::autoconf build_user_subdir]]
         } elseif {[exec id -u] != 0 && [get_os_platform] == "darwin"} {
             macports::set_option user_home \
-                [exec dscl -q . -read /Users/[exec id -un] NFSHomeDirectory | cut -d ' ' -f 2]
-            macports::set_option user_dir \
-                [file join [macports::option user_home] [macports::autoconf user_subdir]]
+                [exec dscl -q . -read /Users/[exec id -un] NFSHomeDirectory | cut -f 2 -d { }]
+            macports::set_option build_user_dir \
+                [file join [macports::option user_home] [macports::autoconf build_user_subdir]]
         } else {
             # Otherwise define the user directory as a directory that will never exist
-            macports::set_option user_home "/dev/null/NO_HOME_DIR"
-            macports::set_option user_dir  "/dev/null/NO_HOME_DIR"
+            macports::set_option user_home      "/dev/null/NO_HOME_DIR"
+            macports::set_option build_user_dir "/dev/null/NO_HOME_DIR"
         }
     }
 
     ##
     # Locate and load any configuration files.
     proc init_configuration {} {
-        # Run configuration files in conf_path and user_dir
+        # Run configuration files in conf_path and build_user_dir
         set global_conf_file "[macports::autoconf conf_path]/macports.conf"
-        set user_conf_file "[macports::option user_dir]/macports.conf"
+        set user_conf_file "[macports::option build_user_dir]/macports.conf"
         load_config_file $bootstrap_options $global_conf_file
         load_config_file $bootstrap_options $user_conf_file
 
         # Load the user configuration file, if it exists
-        load_conf_file $user_options "[macports::option user_dir]/user.conf"
+        load_conf_file $user_options "[macports::option build_user_dir]/user.conf"
 
         # Load the sources.conf and thus the available port trees
         load_sources
