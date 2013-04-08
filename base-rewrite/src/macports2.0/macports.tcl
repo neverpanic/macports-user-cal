@@ -96,11 +96,6 @@ namespace eval macports {
     variable macosx_version [private::get_macosx_version]
 
     ##
-    # The home directory of the user executing MacPorts, or a non-existant
-    # directory, if the executing user could not be determined.
-    variable user_home
-
-    ##
     # Initializes MacPorts and sets all required internal variables.
     #
     # \warning
@@ -111,16 +106,11 @@ namespace eval macports {
         # set the system encoding to utf-8
         encoding system utf-8
 
-        # initialize private data structures
+        # initialize private data structures and variables. This for example
+        # includes
+        #  - setting some environment variables and preferences
+        #  - reading the configuration files
         private::init
-
-        # Ensure that the macports user directory (i.e. ~/.macports) exists, if
-        # $HOME is defined. Also save $HOME for later use before replacing it
-        # with a custom home directory.
-        private::init_home
-
-        # Load configuration from files
-        private::init_configuration
     }
 
     ##
