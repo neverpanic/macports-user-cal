@@ -161,7 +161,7 @@ namespace eval macports {
     #         no setting by that name
     proc ui {key} {
         if {[info exists private::ui_options($key)]} {
-            return private::ui_options($key)
+            return $private::ui_options($key)
         }
         return {}
     }
@@ -196,7 +196,7 @@ namespace eval macports {
     #         no setting by that name
     proc option {key} {
         if {[info exists private::global_options($key)]} {
-            return private::global_options($key)
+            return $private::global_options($key)
         }
         return {}
     }
@@ -222,7 +222,7 @@ namespace eval macports {
     #         no setting by that name
     proc autoconf {key} {
         if {[info exists autoconf::$key]} {
-            return autoconf::$key
+            return [set autoconf::$key]
         }
         return {}
     }
