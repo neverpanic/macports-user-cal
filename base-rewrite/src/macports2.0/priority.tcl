@@ -58,7 +58,7 @@ namespace eval macports::priority {
 	# \par Example
 	# If you try to search for a port, but your port index is corrupt or
 	# missing, MacPorts cannot continue and will abort with this priority.
-	variable error  1
+	variable error 1
 
 	##
 	# Priority used when possibly undesired conditions arise, but MacPorts
@@ -67,7 +67,7 @@ namespace eval macports::priority {
 	# \par Example
 	# MacPorts will warn you using this priority if your port trees have not
 	# been synced in a long time.
-	variable warn   2
+	variable warning 2
 
 	##
 	# Priority describing information that might be relevant for the user,
@@ -87,7 +87,7 @@ namespace eval macports::priority {
 	# \par Example
 	# port checksum prints the checksums recorded in the Portfile and the
 	# checksums of the downloaded distfile using this priority.
-	variable info   4
+	variable info 4
 
 	##
 	# Priority for internal debugging information of MacPorts. Use this when
@@ -98,5 +98,5 @@ namespace eval macports::priority {
 	#
 	# \par Example
 	# Every command execution will be printed using this priority.
-	variable debug  5
+	variable debug 5
 }
