@@ -1,5 +1,8 @@
 SRCS=fastload.tcl\
-	 autoconf.tcl
+	 autoconf.tcl\
+	 macports.tcl\
+	 priority.tcl\
+	 private.tcl
 OBJS=get_systemconfiguration_proxies.o\
 	 sysctl.o\
 	 tclglue.o
