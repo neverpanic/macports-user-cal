@@ -30,17 +30,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-package provide macports::autoconf 1.0
+package provide macports::autoconf 2.0
 
 namespace eval macports::autoconf {
     variable bzip2_path             "@BZIP2@"
     variable chown_path             "@CHOWN@"
     variable gzip_path              "@GZIP@"
-    variable macports_conf_path     "@MPCONFIGDIR_EXPANDED@"
-    variable macports_version       "@MACPORTS_VERSION@"
-    variable macports_user_subdir   ".macports"
-    variable macports_user_dir      [file join "~" $macports_user_subdir]
-    variable macportsuser           "@RUNUSR@"
+    variable conf_path              "@MPCONFIGDIR_EXPANDED@"
+    variable version                "@MACPORTS_VERSION@"
+    variable build_user_subdir      ".macports"
+    variable build_user_dir         [file join "~" $build_user_subdir]
+    variable builduser              "@RUNUSR@"
     variable mdfind_path            "@MDFIND@"
     variable mdls_path              "@MDLS@"
     variable open_path              "@OPEN@"
