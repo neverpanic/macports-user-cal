@@ -39,6 +39,8 @@ package provide macports 2.0
 package require macports::private 2.0
 package require macports::priority 2.0
 
+package require msgcat 1.4.2
+
 ##
 # This is the MacPorts core. It provides all API calls for all features present
 # in MacPorts and is supposed to be used from a MacPorts client. The `port`
@@ -225,5 +227,30 @@ namespace eval macports {
             return [set autoconf::$key]
         }
         return {}
+    }
+
+    ##
+    # Print a (translatable) message to the client of this API and log the
+    # message. The logged message will not be translated. After translation, the
+    # message will be passed to the callback registered using \c
+    # register_ui_callback. No priority filtering is done in this function;
+    # callbacks are expected to filter on their own based on their current
+    # settings (which might change at runtime).
+    #
+    # @param[in] priority one of the constants in \c macports::priority, setting
+    #                     the severity of the message.
+    # @param[in] message a string containing \c printf style placeholders that
+    #                    is subject to localization. For each placeholder used,
+    #                    a value must be passed in the variadic argument list.
+    # @param[in] args list of variadic arguments used to fill in the
+    #                 placeholders in the message.
+    proc msg {priority message args} {
+        set localized [::msgcat::mc $message]
+        if {$private::ui_callback != {}} {
+            eval $private::ui_callback $priority $localized {*}$args
+        } else {
+            # TODO: Remove this after debugging!
+            puts "$priority: [format $localized {*}$args]"
+        }
     }
 }
