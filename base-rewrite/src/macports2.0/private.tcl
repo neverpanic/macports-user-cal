@@ -195,18 +195,21 @@ namespace eval macports::private {
             if {[regexp {^(\w+://\S+)(?:\s+\[(\w+(?:, *\w+)*)\])?\s*$} $line -> url flags]} {
                 set flags [split $flags ", "]
                 foreach flag $flags {
-                    if {[lsearch -exact [list nosync default] $flag] == -1} {
-                        macports::msg $macports::priority::warning \
-                            "Invalid source flag `%s' in %s:%d." \
-                            $flag [macports::option sources_conf] $lineno
-                    }
-                    if {$flag == "default"} {
-                        if {$default_source != {}} {
-                            macports::msg $macports::priority::warning \
-                                "Multiple default sources specified in %s:%d." \
-                                [macports::option sources_conf] $lineno
+                    switch -exact $flag {
+                        {nosync} {}
+                        {default} {
+                            if {$default_source != {}} {
+                                macports::msg $macports::priority::warning \
+                                    "Multiple default sources specified in %s:%d." \
+                                    [macports::option sources_conf] $lineno
+                            }
                             set default_source [concat [list $url] $flags]
-                        }
+                         }
+                         default {
+                            macports::msg $macports::priority::warning \
+                                "Invalid source flag `%s' in %s:%d." \
+                                $flag [macports::option sources_conf] $lineno
+                         }
                     }
                 }
                 lappend sources [concat [list $url] $flags]
