@@ -65,9 +65,31 @@ namespace eval macports::private {
     variable default_source {}
 
     ##
+    # A list of variant specifications the user configured to be requested on
+    # every port that will be installed. This value can be configured using the
+    # \c variants_conf setting, which usually defaults to \c variants.conf.
+    variable default_variants
+    array set default_variants {}
+
+    ##
+    # A map of MacPorts settings, mapping keys to correpsonding values. Do not
+    # modify or access this map directly, but use \c macports::option, \c
+    # macports::set_option and \c macports::option_bool to query and set
+    # entries.
+    variable global_options
+    array set global_options {}
+
+    ##
     # Initialize private variables and other state. If you allocate any
     # resources here, make sure to free them again in \c private::release.
     proc init {} {
+        # Ensure that the macports user directory (i.e. ~/.macports) exists, if
+        # $HOME is defined. Also save $HOME for later use before replacing it
+        # with a custom home directory.
+        init_home
+
+        # Load configuration from files
+        init_configuration
     }
 
     ##
@@ -118,6 +140,9 @@ namespace eval macports::private {
 
         # Load the sources.conf and thus the available port trees
         load_sources
+
+        # Load the variants.conf holding the default user-selected variants
+        load_variants_conf
     }
 
     ##
@@ -145,6 +170,11 @@ namespace eval macports::private {
         set lineno 0
         while {[gets $fd line] >= 0} {
             incr lineno
+            set line [string trim $line]
+            if {[regexp {^#|^$} $line]} {
+                # ignore comment lines
+                continue
+            }
             if {[regexp {^(\w+)(?:[ \t]+(.*))?$} $line match option val] == 1} {
                 if {[lsearch -exact $valid_options $option] >= 0} {
                     macports::set_option $option [string trim $val]
@@ -238,6 +268,67 @@ namespace eval macports::private {
                 [macports::option sources_conf]
             set default_source [lindex $sources end]
         }
+    }
+
+    ##
+    # Load the default variants from variants.conf as specified in
+    # macports.conf. If variants.conf does not exist, print a debug message, if
+    # is contains invalid content, print a warning. Prints a warning if the file
+    # exists, but can not be opened.
+    #
+    # @return 1, if the file doesn't exist or cannot be opened, 0 otherwise
+    proc load_variants_conf {} {
+        variable default_variants
+
+        set variants_conf [macports::option variants_conf]
+        # check whether variants_conf is set
+        if {$variants_conf == {}} {
+            return 1
+        }
+        # check whether the file exists
+        if {![file exists $variants_conf]} {
+            macports::msg $macports::priority::debug \
+                "Variant configuration file %s specified by variants_conf does not exist, ignoring." \
+                $variants_conf
+            return 1
+        }
+        # try to open variants.conf
+        if {[catch {set fd [open $variants_conf r]} result]} {
+            macports::msg $macports::priority::warning \
+                "Could not open variant configuration file %s: %s." \
+                $variants_conf $result
+            return 1
+        }
+
+        set lineno 0
+        while {[gets $fd line] >= 0} {
+            incr lineno
+            set line [string trim $line]
+            if {[regexp {^#|^$} $line]} {
+                # ignore comment lines
+                continue
+            }
+            foreach arg [split $line " \t"] {
+                if {[regexp {^(\+|-)([-A-Za-z0-9_]+)$} $arg -> sign opt]} {
+                    # previously duplicate values were ignored, but if I specify
+                    # +ipv6 -ipv6 it makes more sense to use the latter and
+                    # print a warning.
+                    if {[info exists default_variants($opt)]} {
+                        macports::msg $macports::priority::warning \
+                            "Variant %s specified multiple times, using last definition in %s:%d." \
+                            $opt $variants_conf $lineno
+                    }
+                    set default_variants($opt) $sign
+                } else {
+                    macports::msg $macports::priority::warning \
+                        "Ignoring invalid variant configuration `%s' in %s:%d." \
+                        $arg $variants_conf $lineno
+                }
+            }
+        }
+
+        close $fd
+        return 0
     }
 
     ##
