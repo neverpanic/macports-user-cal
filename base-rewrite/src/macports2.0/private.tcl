@@ -37,6 +37,7 @@
 package provide macports::private 2.0
 
 package require macports::autoconf 2.0
+package require macports::priority 2.0
 
 ##
 # \warning
@@ -103,6 +104,9 @@ namespace eval macports::private {
     ##
     # Locate and load any configuration files.
     proc init_configuration {} {
+        variable bootstrap_options
+        variable user_options
+
         # Run configuration files in conf_path and build_user_dir
         set global_conf_file "[macports::autoconf conf_path]/macports.conf"
         set user_conf_file "[macports::option build_user_dir]/macports.conf"
@@ -110,7 +114,7 @@ namespace eval macports::private {
         load_config_file $bootstrap_options $user_conf_file
 
         # Load the user configuration file, if it exists
-        load_conf_file $user_options "[macports::option build_user_dir]/user.conf"
+        load_config_file $user_options "[macports::option build_user_dir]/user.conf"
 
         # Load the sources.conf and thus the available port trees
         load_sources
@@ -173,7 +177,7 @@ namespace eval macports::private {
         }
 
         # Load sources_conf
-        if {catch {set fd [open [macports::option sources_conf] r]} result} {
+        if {[catch {set fd [open [macports::option sources_conf] r]} result]} {
             macports::msg $macports::priority::error \
                 "Can't open sources_conf %s: %s." \
                 [macports::option sources_conf] $result
@@ -218,7 +222,7 @@ namespace eval macports::private {
         if {[llength $sources] == 0} {
             macports::msg $macports::priority::error \
                 "No sources are defined in %s. Cannot continue without a ports tree." \
-                [macports::options sources_conf]
+                [macports::option sources_conf]
             error "no port sources available"
         }
 
@@ -228,7 +232,7 @@ namespace eval macports::private {
         if {$default_source == {}} {
             macports::msg $macports::priority::warning \
                 "No default port source specified in %s, using last source as default." \
-                [macports::options sources_conf]
+                [macports::option sources_conf]
             set default_source [lindex $sources end]
         }
     }
