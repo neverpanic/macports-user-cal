@@ -133,8 +133,7 @@ namespace eval macports::private {
             return 1
         }
         if {[catch {set fd [open $file r]} result]} {
-            macports::msg \
-                macports::priority::warn \
+            macports::msg $macports::priority::warn \
                 "Could not open configuration file %s for reading: %s" \
                 $file $result
             return 1
@@ -146,8 +145,7 @@ namespace eval macports::private {
                 if {[lsearch -exact $valid_options $option] >= 0} {
                     macports::set_option $option [string trim $val]
                 } else {
-                    macports::msg \
-                        macports::priority::warn \
+                    macports::msg $macports::priority::warn \
                         "Ignoring unknown configuration option `%s' in configuration file %s:%d." \
                         $option $file $lineno
                 }
@@ -168,7 +166,7 @@ namespace eval macports::private {
         variable default_source
 
         if {[macports::option sources_conf] == {}} {
-            macports::msg macports::priority::error \
+            macports::msg $macports::priority::error \
                 "sources_conf must be set in %s or %s." \
                 $global_conf_file $user_conf_file
             error "sources_conf not set"
@@ -176,7 +174,7 @@ namespace eval macports::private {
 
         # Load sources_conf
         if {catch {set fd [open [macports::option sources_conf] r]} result} {
-            macports::msg macports::priority::error \
+            macports::msg $macports::priority::error \
                 "Can't open sources_conf %s: %s." \
                 [macports::option sources_conf] $result
             error "error opening sources_conf"
@@ -194,13 +192,13 @@ namespace eval macports::private {
                 set flags [split $flags ", "]
                 foreach flag $flags {
                     if {[lsearch -exact [list nosync default] $flag] == -1} {
-                        macports::msg macports::priority::warning \
+                        macports::msg $macports::priority::warning \
                             "Invalid source flag `%s' in %s:%d." \
                             $flag [macports::option sources_conf] $lineno
                     }
                     if {$flag == "default"} {
                         if {$default_source != {}} {
-                            macports::msg macports::priority::warning \
+                            macports::msg $macports::priority::warning \
                                 "Multiple default sources specified in %s:%d." \
                                 [macports::option sources_conf] $lineno
                             set default_source [concat [list $url] $flags]
@@ -209,7 +207,7 @@ namespace eval macports::private {
                 }
                 lappend sources [concat [list $url] $flags]
             } else {
-                macports::msg macports::priority::warning \
+                macports::msg $macports::priority::warning \
                     "Ignoring invalid source `%s' in %s:%d." \
                     $line [macports::option sources_conf] $lineno
             }
@@ -218,7 +216,7 @@ namespace eval macports::private {
 
         # Throw an error when no sources are defined.
         if {[llength $sources] == 0} {
-            macports::msg macports::priority::error \
+            macports::msg $macports::priority::error \
                 "No sources are defined in %s. Cannot continue without a ports tree." \
                 [macports::options sources_conf]
             error "no port sources available"
@@ -228,7 +226,7 @@ namespace eval macports::private {
         # macports::getportresourcepath fails when the first source doesn't
         # contain _resources.
         if {$default_source == {}} {
-            macports::msg macports::priority::warning \
+            macports::msg $macports::priority::warning \
                 "No default port source specified in %s, using last source as default." \
                 [macports::options sources_conf]
             set default_source [lindex $sources end]
