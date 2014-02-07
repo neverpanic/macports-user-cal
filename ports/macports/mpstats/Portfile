@@ -1,0 +1,45 @@
+# $Id$
+
+PortSystem          1.0
+
+name                mpstats
+version             0.1
+categories          sysutils
+license             BSD
+platforms           darwin
+supported_archs     noarch
+maintainers         nomaintainer
+description         submit statistics about your macports installation
+long_description \
+   This is a script and LaunchAgent which can run weekly to report \
+   information about your system and installed ports to a server, which \
+   publishes the aggregate statistics on the web.
+
+homepage            http://www.macports.org/
+master_sites        sourceforge:macports
+
+use_bzip2           yes
+checksums           rmd160 6411865c289d95f15eec870fd3aa8d1ffa7c4502 \
+                    sha256 43a7c0e5956acf96f6a3e9c913229c6decbeabb5a4e5645a829a7fca7878a7ef
+
+configure {
+    reinplace "s|set prefix /opt/local|set prefix ${prefix}|" ${worksrcpath}/mpstats.tcl
+}
+build {}
+destroot {
+    xinstall ${worksrcpath}/mpstats.tcl ${destroot}${prefix}/bin/mpstats
+    xinstall -m 444 ${worksrcpath}/mpstats.conf ${destroot}${prefix}/etc/mpstats.conf.default
+    system -W ${worksrcpath} "DESTDIR=${destroot} ./setupstats.sh ${prefix}/bin/mpstats"
+}
+
+post-activate {
+    if {![file exists ${prefix}/etc/mpstats.conf]} {
+        copy ${prefix}/etc/mpstats.conf.default ${prefix}/etc/mpstats.conf
+        reinplace "s|@STATS_UUID@|[exec uuidgen]|" ${prefix}/etc/mpstats.conf
+    }
+}
+
+notes \
+"To enable automatic weekly reporting of data to the stats server,\
+run:
+launchctl load -w /Library/LaunchAgents/org.macports.stats.plist"
