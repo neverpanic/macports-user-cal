@@ -3,7 +3,7 @@
 PortSystem          1.0
 
 name                mpstats
-version             0.1
+version             0.1.2
 categories          sysutils
 license             BSD
 platforms           darwin
@@ -52,9 +52,11 @@ destroot {
         ${worksrcpath}/mpstats.plist.default \
         ${destroot}${launchd_dir}${startupitem.plist}.default
 
+    xinstall -m 755 -d \
+        ${destroot}${prefix}/etc/macports
     xinstall -m 444 \
-        ${filespath}/mpstats.conf \
-        ${destroot}${prefix}/etc/mpstats.conf.default
+        ${filespath}/stats.conf \
+        ${destroot}${prefix}/etc/macports/stats.conf
 
     # install the plist, if startupitem.install is set
     if {[getuid] == 0 && ${startupitem.install} ne no} {
@@ -66,13 +68,12 @@ destroot {
 }
 
 post-activate {
-    if {![file exists ${prefix}/etc/mpstats.conf]} {
-        xinstall -m 644 \
-            ${prefix}/etc/mpstats.conf.default \
-            ${prefix}/etc/mpstats.conf
-
-        reinplace "s|@STATS_UUID@|[exec uuidgen]|" \
-            ${prefix}/etc/mpstats.conf
+    set uuidfile ${prefix}/var/macports/stats-uuid
+    if {![file exists ${uuidfile}] || [file size ${uuidfile}] == 0} {
+        set uuid [exec /usr/bin/uuidgen]
+        set fd [open ${uuidfile} w]
+        puts $fd $uuid
+        close $fd
     }
 
     # the result of this will usually be too large for a 64bit integer, but we don't really care

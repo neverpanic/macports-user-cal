@@ -49,20 +49,29 @@ proc usage {} {
 
 proc read_config {} {
     global prefix stats_url stats_id
-    set stats_url localhost
-    set stats_id 123
-    set conf_path "${prefix}/etc/mpstats.conf"
+    set conf_path "${prefix}/etc/macports/stats.conf"
     if {[file isfile $conf_path]} {
         set fd [open $conf_path r]
         while {[gets $fd line] >= 0} {
             set optname [lindex $line 0]
             if {$optname eq "stats_url"} {
                 set stats_url [lindex $line 1]
-            } elseif {$optname eq "stats_id"} {
-                set stats_id [lindex $line 1]
             }
         }
         close $fd
+    }
+
+    set uuid_path "${prefix}/var/macports/stats-uuid"
+    if {[file isfile $uuid_path]} {
+        set fd [open $uuid_path r]
+        gets $fd stats_id
+        close $fd
+        if {[string length $stats_id] == 0} {
+            puts stderr "UUID file ${uuid_path} seems to be empty. Abort."
+        }
+    } else {
+        puts stderr "UUID file ${uuid_path} missing. Abort."
+        exit 1
     }
 }
 
@@ -88,7 +97,8 @@ proc getgccinfo {} {
         # Set gcc version
         return $gcc_v
     } else {
-        ui_warn "gcc exists but could not read version information"
+        # ui_warn "gcc exists but could not read version information"
+        # Don't warn since that's the default now that gcc -> clang
         return none
     }
 }
