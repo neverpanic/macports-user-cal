@@ -3,7 +3,7 @@
 PortSystem          1.0
 
 name                mpstats
-version             0.1.2
+version             0.1.3
 categories          sysutils
 license             BSD
 platforms           darwin
@@ -76,12 +76,10 @@ post-activate {
         close $fd
     }
 
-    # the result of this will usually be too large for a 64bit integer, but we don't really care
-    set hwuuid [exec system_profiler SPHardwareDataType | grep "Hardware UUID" | awk "/Hardware UUID/ {print \$3}" | tr -d - | bc]
     xinstall -m 644 \
         ${launchd_dir}${startupitem.plist}.default \
         ${launchd_dir}${startupitem.plist}
-    reinplace "s|@WEEKDAY@|[expr $hwuuid % 7]|g" \
+    reinplace "s|@WEEKDAY@|[expr {int(7 * rand())}]|g" \
         ${launchd_dir}${startupitem.plist}
     reinplace "s|@HOUR@|[clock format [clock seconds] -format %H]|g" \
         ${launchd_dir}${startupitem.plist}
