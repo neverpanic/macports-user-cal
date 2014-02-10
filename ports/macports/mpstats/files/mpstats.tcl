@@ -49,7 +49,7 @@ proc usage {} {
 ##
 # Reads the configuration from the statistics config file at $prefix/etc/macports/stats.conf and the
 # UUID file $prefix/var/macports/stats-uiud. Stores the configured values in global variables.
-# Currently, the follwing configuration variables are supported:
+# Currently, the following configuration variables are supported:
 #  - stats_url The URL that will be used for POST submission of the statistics
 #  - stats_id  The UUID of this MacPorts installation; to be read from the UUID file
 # Prints an error message (but doesn't abort) if the UUID is empty.
@@ -408,7 +408,7 @@ proc action_stats {subcommands} {
             ui_notice "Success."
         }
         show {
-            ui_notice "Would submit the follwoing data to $stats_url:"
+            ui_notice "Would submit the following data to $stats_url:"
             ui_msg "$json"
         }
         default {
