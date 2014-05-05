@@ -1,5 +1,7 @@
-#!/usr/bin/tclsh
+#!/bin/sh
 # -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# \
+if type -fp port-tclsh >/dev/null; then exec port-tclsh "$0" "$@"; else exec /usr/bin/tclsh "$0" "$@"; fi
 # $Id$
 #
 # Copyright (c) 2011,2013 The MacPorts Project
@@ -29,11 +31,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set prefix /opt/local
+set prefix "@PREFIX@"
 
-if {[catch {source ${prefix}/share/macports/Tcl/macports1.0/macports_fastload.tcl} result]} {
-    puts stderr "Error: $result"
-    exit 1
+if {[file exists ${prefix}/share/macports/Tcl/macports1.0/macports_fastload.tcl]} {
+    if {[catch {source ${prefix}/share/macports/Tcl/macports1.0/macports_fastload.tcl} result]} {
+        puts stderr "Error: $result"
+        exit 1
+    }
 }
 
 package require macports
